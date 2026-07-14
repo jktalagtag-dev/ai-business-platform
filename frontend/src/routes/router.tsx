@@ -3,8 +3,8 @@ import { AuthLayout } from '@/layouts/AuthLayout';
 import { AppLayout } from '@/layouts/AppLayout';
 import { RequireAuth } from '@/routes/guards/RequireAuth';
 import { RequireAbility } from '@/routes/guards/RequireAbility';
+import { RequireRole } from '@/routes/guards/RequireRole';
 import { RedirectIfAuthenticated } from '@/routes/guards/RedirectIfAuthenticated';
-import { ComingSoonPage } from '@/pages/ComingSoonPage';
 import { ForbiddenPage } from '@/pages/errors/ForbiddenPage';
 import { NotFoundPage } from '@/pages/errors/NotFoundPage';
 import { paths } from '@/routes/routes.config';
@@ -48,6 +48,8 @@ const lazyAutomationJobsList = () =>
   import('@/pages/automation/AutomationJobsListPage').then((m) => ({
     Component: m.AutomationJobsListPage,
   }));
+const lazyAuditLog = () =>
+  import('@/pages/audit/AuditLogPage').then((m) => ({ Component: m.AuditLogPage }));
 
 export const router = createBrowserRouter([
   {
@@ -110,7 +112,10 @@ export const router = createBrowserRouter([
               { path: paths.automationJobs, lazy: lazyAutomationJobsList },
             ],
           },
-          { path: paths.auditLog, element: <ComingSoonPage title="Audit Log" /> },
+          {
+            element: <RequireRole roles={['Owner', 'Admin']} />,
+            children: [{ path: paths.auditLog, lazy: lazyAuditLog }],
+          },
           { path: paths.forbidden, element: <ForbiddenPage /> },
         ],
       },

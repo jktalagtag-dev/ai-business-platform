@@ -3,6 +3,7 @@ import { render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { RequireAuth } from '@/routes/guards/RequireAuth';
 import { RequireAbility } from '@/routes/guards/RequireAbility';
+import { RequireRole } from '@/routes/guards/RequireRole';
 import { useAuthStore } from '@/store/authStore';
 import { makeAuthResource } from '@/tests/fixtures';
 
@@ -105,5 +106,35 @@ describe('RequireAbility', () => {
       </Routes>
     );
     expect(screen.getByText('forbidden')).toBeInTheDocument();
+  });
+});
+
+describe('RequireRole', () => {
+  it('redirects to /403 when the role is not in the allowed list', () => {
+    useAuthStore.getState().setSession(makeAuthResource({ roleName: 'Member' }));
+    renderAt(
+      '/settings/audit-log',
+      <Routes>
+        <Route element={<RequireRole roles={['Owner', 'Admin']} />}>
+          <Route path="/settings/audit-log" element={<div>audit log</div>} />
+        </Route>
+        <Route path="/403" element={<div>forbidden</div>} />
+      </Routes>
+    );
+    expect(screen.getByText('forbidden')).toBeInTheDocument();
+  });
+
+  it('renders when the role is in the allowed list', () => {
+    useAuthStore.getState().setSession(makeAuthResource({ roleName: 'Admin' }));
+    renderAt(
+      '/settings/audit-log',
+      <Routes>
+        <Route element={<RequireRole roles={['Owner', 'Admin']} />}>
+          <Route path="/settings/audit-log" element={<div>audit log</div>} />
+        </Route>
+        <Route path="/403" element={<div>forbidden</div>} />
+      </Routes>
+    );
+    expect(screen.getByText('audit log')).toBeInTheDocument();
   });
 });

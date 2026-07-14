@@ -298,3 +298,41 @@ src/
 - Stock adjustment (`POST /stock/{product}/adjust`) takes a signed `quantity`
   (positive for inbound, negative for outbound, either sign for a manual
   adjustment) — enforced client-side by `adjustStockSchema`.
+
+## Audit Log notes
+
+- **Read-only, single endpoint** (`GET /audit-logs`) — no per-module audit
+  tables or views; every module (Employee, Inventory, Ticket, Automation, plus
+  a workflow's `log_audit_event` action) writes into the same shared
+  `audit_logs` table via the backend's one `AuditLogService`. AI Assistant and
+  Knowledge Base never call it, so their activity never appears here.
+- **Role-gated, not permission-gated**: the backend restricts this route with
+  `role:owner,admin` middleware, not an ability check — there is no
+  `audit.view` permission key anywhere in the system. Since every other route
+  in this app is gated by `RequireAbility` (a permission-key guard), this
+  needed its own `RequireRole` guard (`routes/guards/RequireRole.tsx`) that
+  checks the session's role name directly instead.
+- **Only two filters exist server-side**: `subject_type` and `subject_id`,
+  both plain strings — there's no actor, action, or date-range filter to
+  build UI for. `subject_type` is deliberately a free-text input rather than a
+  dropdown of the ~10 built-in values (ticket, employee, product, workflow,
+  ...), since a workflow's `log_audit_event` action can log against any
+  arbitrary subject type/id a workflow author configures, not just the
+  built-in ones.
+- **`actor_user_id` is a raw id, not a name** — there's no users/members
+  lookup endpoint to join against, so the Actor column shows the id as-is, or
+  "System" when null (every workflow-triggered entry — scheduled job outcomes
+  and the `log_audit_event` action — always records a null actor).
+- **`changes` has no fixed shape** — it's an arbitrary JSON object that varies
+  per call site (the changed fields on an update, `{}` on a lifecycle
+  transition, etc.), so it's rendered as a collapsible raw JSON dump rather
+  than field-specific formatting.
+- FRONTEND.md says this route should be gated by `RequireAbility('audit.view')`
+  — that permission doesn't exist in the backend at all (confirmed via the
+  route middleware and its feature test), so `RequireRole` was built instead,
+  matching what `routes.config.ts`'s nav item (`roles: ['Owner', 'Admin']`)
+  already assumed correctly.
+- Verified live against the real backend: the route renders correctly for an
+  Owner session and the real `GET /audit-logs` request returns `200 OK` with
+  an empty `data: []` (this tenant hasn't triggered any audited action yet) —
+  a legitimate empty state, not an error.

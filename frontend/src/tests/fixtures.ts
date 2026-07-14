@@ -14,6 +14,7 @@ import type {
   WorkflowResource,
   WorkflowStepResource,
 } from '@/modules/automation/types';
+import type { AuditLogResource } from '@/modules/audit/types';
 
 export function makeAuthResource(overrides?: {
   permissions?: string[];
@@ -273,6 +274,25 @@ export function makeWorkflowStepResource(
       step_order: 0,
       step_type: 'trigger',
       config: { kind: 'event', event: 'ticket.created' },
+      ...overrides,
+    },
+  };
+}
+
+export function makeAuditLogResource(
+  overrides?: Partial<AuditLogResource['attributes']> & { id?: string }
+): AuditLogResource {
+  return {
+    id: overrides?.id ?? 'audit_log_1',
+    type: 'audit_log',
+    attributes: {
+      actor_user_id: 'user_1',
+      action: 'employee.created',
+      subject_type: 'employee',
+      subject_id: 'employee_1',
+      changes: { first_name: 'Jane', last_name: 'Doe' },
+      ip_address: '127.0.0.1',
+      created_at: '2026-07-13T10:00:00+00:00',
       ...overrides,
     },
   };
