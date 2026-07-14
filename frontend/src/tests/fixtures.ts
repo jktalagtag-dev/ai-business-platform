@@ -6,6 +6,8 @@ import type {
   SupplierResource,
 } from '@/modules/inventory/types';
 import type { DepartmentResource, EmployeeResource, PositionResource } from '@/modules/employee/types';
+import type { TicketResource } from '@/modules/ticket/types';
+import type { AiConversationResource, AiMessageResource } from '@/modules/ai/types';
 
 export function makeAuthResource(overrides?: {
   permissions?: string[];
@@ -144,6 +146,72 @@ export function makeEmployeeResource(
       emergency_contact: null,
       avatar_url: null,
       bio: null,
+      ...overrides,
+    },
+  };
+}
+
+export function makeTicketResource(
+  overrides?: Partial<TicketResource['attributes']> & { id?: string }
+): TicketResource {
+  return {
+    id: overrides?.id ?? 'ticket_1',
+    type: 'ticket',
+    attributes: {
+      ticket_number: 'TCK-000123',
+      employee_id: 'employee_1',
+      assigned_technician_id: null,
+      department_id: null,
+      ticket_type: 'hardware',
+      priority: 'medium',
+      status: 'open',
+      subject: "Laptop won't boot",
+      description: 'Pressed the power button and nothing happens.',
+      resolution_notes: null,
+      resolved_at: null,
+      closed_at: null,
+      sla_breached_at: null,
+      created_at: '2026-07-13T10:00:00+00:00',
+      ...overrides,
+    },
+  };
+}
+
+export function makeAiConversationResource(
+  overrides?: Partial<AiConversationResource['attributes']> & { id?: string }
+): AiConversationResource {
+  return {
+    id: overrides?.id ?? 'conversation_1',
+    type: 'ai_conversation',
+    attributes: {
+      title: null,
+      system_prompt: null,
+      provider: 'openai',
+      model: 'gpt-4o-mini',
+      total_prompt_tokens: 0,
+      total_completion_tokens: 0,
+      created_at: '2026-07-13T10:00:00+00:00',
+      updated_at: '2026-07-13T10:00:00+00:00',
+      ...overrides,
+    },
+  };
+}
+
+export function makeAiMessageResource(
+  overrides?: Partial<AiMessageResource['attributes']> & { id?: string }
+): AiMessageResource {
+  return {
+    id: overrides?.id ?? 'message_1',
+    type: 'ai_message',
+    attributes: {
+      role: 'user',
+      content: 'Hello',
+      tool_calls: null,
+      tool_call_id: null,
+      name: null,
+      prompt_tokens: null,
+      completion_tokens: null,
+      created_at: '2026-07-13T10:00:00+00:00',
       ...overrides,
     },
   };

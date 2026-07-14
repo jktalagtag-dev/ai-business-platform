@@ -30,6 +30,14 @@ const lazyEmployeeDetail = () =>
   import('@/pages/hr/EmployeeDetailPage').then((m) => ({ Component: m.EmployeeDetailPage }));
 const lazyMyEmployeeProfile = () =>
   import('@/pages/hr/MyEmployeeProfilePage').then((m) => ({ Component: m.MyEmployeeProfilePage }));
+const lazyTicketsList = () =>
+  import('@/pages/tickets/TicketsListPage').then((m) => ({ Component: m.TicketsListPage }));
+const lazyTicketDetail = () =>
+  import('@/pages/tickets/TicketDetailPage').then((m) => ({ Component: m.TicketDetailPage }));
+const lazyConversationsList = () =>
+  import('@/pages/ai/ConversationsListPage').then((m) => ({ Component: m.ConversationsListPage }));
+const lazyConversationDetail = () =>
+  import('@/pages/ai/ConversationDetailPage').then((m) => ({ Component: m.ConversationDetailPage }));
 
 export const router = createBrowserRouter([
   {
@@ -54,8 +62,10 @@ export const router = createBrowserRouter([
         children: [
           { index: true, lazy: lazyDashboard },
           { path: paths.profile, lazy: lazyProfile },
-          { path: paths.tickets, element: <ComingSoonPage title="Tickets" /> },
-          { path: paths.aiConversations, element: <ComingSoonPage title="AI Assistant" /> },
+          { path: paths.tickets, lazy: lazyTicketsList },
+          { path: `${paths.tickets}/:id`, lazy: lazyTicketDetail },
+          { path: paths.aiConversations, lazy: lazyConversationsList },
+          { path: `${paths.aiConversations}/:id`, lazy: lazyConversationDetail },
           {
             element: (
               <RequireAbility
