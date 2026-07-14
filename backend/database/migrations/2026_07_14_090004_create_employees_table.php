@@ -19,7 +19,12 @@ return new class extends Migration
             $table->string('phone')->nullable();
             $table->foreignUlid('department_id')->nullable()->constrained('departments')->nullOnDelete();
             $table->foreignUlid('position_id')->nullable()->constrained('positions')->nullOnDelete();
-            $table->foreignUlid('manager_employee_id')->nullable()->constrained('employees')->nullOnDelete();
+            // The self-referencing FK is added below, after this table's
+            // primary key exists — Laravel queues a column's ->primary()
+            // constraint after any ->constrained() foreign keys declared in
+            // the same Schema::create, so a self-referencing FK declared
+            // inline here would be built before its own PK exists.
+            $table->foreignUlid('manager_employee_id')->nullable();
             $table->string('employment_type')->default('full_time');
             $table->string('employment_status')->default('active');
             $table->date('hire_date');
@@ -36,6 +41,10 @@ return new class extends Migration
             $table->index(['tenant_id', 'department_id']);
             $table->index(['tenant_id', 'manager_employee_id']);
             $table->index(['tenant_id', 'created_at']);
+        });
+
+        Schema::table('employees', function (Blueprint $table) {
+            $table->foreign('manager_employee_id')->references('id')->on('employees')->nullOnDelete();
         });
     }
 
