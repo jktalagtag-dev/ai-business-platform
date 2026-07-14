@@ -40,6 +40,14 @@ const lazyConversationDetail = () =>
   import('@/pages/ai/ConversationDetailPage').then((m) => ({ Component: m.ConversationDetailPage }));
 const lazyKnowledgeBase = () =>
   import('@/pages/kb/KnowledgeBasePage').then((m) => ({ Component: m.KnowledgeBasePage }));
+const lazyWorkflowsList = () =>
+  import('@/pages/automation/WorkflowsListPage').then((m) => ({ Component: m.WorkflowsListPage }));
+const lazyWorkflowDetail = () =>
+  import('@/pages/automation/WorkflowDetailPage').then((m) => ({ Component: m.WorkflowDetailPage }));
+const lazyAutomationJobsList = () =>
+  import('@/pages/automation/AutomationJobsListPage').then((m) => ({
+    Component: m.AutomationJobsListPage,
+  }));
 
 export const router = createBrowserRouter([
   {
@@ -96,7 +104,11 @@ export const router = createBrowserRouter([
           },
           {
             element: <RequireAbility ability="automation.view" />,
-            children: [{ path: paths.automation, element: <ComingSoonPage title="Automation" /> }],
+            children: [
+              { path: paths.automation, lazy: lazyWorkflowsList },
+              { path: `${paths.automation}/:id`, lazy: lazyWorkflowDetail },
+              { path: paths.automationJobs, lazy: lazyAutomationJobsList },
+            ],
           },
           { path: paths.auditLog, element: <ComingSoonPage title="Audit Log" /> },
           { path: paths.forbidden, element: <ForbiddenPage /> },

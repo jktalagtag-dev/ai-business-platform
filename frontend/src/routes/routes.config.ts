@@ -8,6 +8,7 @@ import {
   MessageSquare,
   BookOpen,
   Workflow,
+  ListChecks,
   ScrollText,
   type LucideIcon,
 } from 'lucide-react';
@@ -30,6 +31,7 @@ export const paths = {
   aiConversations: '/ai/conversations',
   knowledgeBase: '/knowledge-base',
   automation: '/automation/workflows',
+  automationJobs: '/automation/jobs',
   auditLog: '/settings/audit-log',
 
   forbidden: '/403',
@@ -78,6 +80,12 @@ export const navItems: NavItem[] = [
     ability: 'knowledge_base.view',
   },
   { label: 'Automation', path: paths.automation, icon: Workflow, ability: 'automation.view' },
+  {
+    label: 'Automation Jobs',
+    path: paths.automationJobs,
+    icon: ListChecks,
+    ability: 'automation.view',
+  },
   {
     label: 'Audit Log',
     path: paths.auditLog,

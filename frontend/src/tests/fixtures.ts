@@ -9,6 +9,11 @@ import type { DepartmentResource, EmployeeResource, PositionResource } from '@/m
 import type { TicketResource } from '@/modules/ticket/types';
 import type { AiConversationResource, AiMessageResource } from '@/modules/ai/types';
 import type { KbDocumentResource } from '@/modules/kb/types';
+import type {
+  AutomationJobResource,
+  WorkflowResource,
+  WorkflowStepResource,
+} from '@/modules/automation/types';
 
 export function makeAuthResource(overrides?: {
   permissions?: string[];
@@ -234,6 +239,64 @@ export function makeKbDocumentResource(
       page_count: 2,
       created_at: '2026-07-13T10:00:00+00:00',
       updated_at: '2026-07-13T10:00:05+00:00',
+      ...overrides,
+    },
+  };
+}
+
+export function makeWorkflowResource(
+  overrides?: Partial<WorkflowResource['attributes']> & { id?: string }
+): WorkflowResource {
+  return {
+    id: overrides?.id ?? 'workflow_1',
+    type: 'workflow',
+    attributes: {
+      name: 'Notify ops on critical ticket',
+      description: 'Sends an email whenever a critical-priority ticket is created.',
+      status: 'draft',
+      created_by_user_id: 'user_1',
+      last_triggered_at: null,
+      created_at: '2026-07-13T10:00:00+00:00',
+      updated_at: '2026-07-13T10:00:00+00:00',
+      ...overrides,
+    },
+  };
+}
+
+export function makeWorkflowStepResource(
+  overrides?: Partial<WorkflowStepResource['attributes']> & { id?: string }
+): WorkflowStepResource {
+  return {
+    id: overrides?.id ?? 'step_1',
+    type: 'workflow_step',
+    attributes: {
+      step_order: 0,
+      step_type: 'trigger',
+      config: { kind: 'event', event: 'ticket.created' },
+      ...overrides,
+    },
+  };
+}
+
+export function makeAutomationJobResource(
+  overrides?: Partial<AutomationJobResource['attributes']> & { id?: string }
+): AutomationJobResource {
+  return {
+    id: overrides?.id ?? 'job_1',
+    type: 'automation_job',
+    attributes: {
+      workflow_id: 'workflow_1',
+      trigger: 'ticket.created',
+      status: 'succeeded',
+      attempts: 1,
+      max_attempts: 3,
+      context: {},
+      error: null,
+      scheduled_at: '2026-07-13T10:00:00+00:00',
+      started_at: '2026-07-13T10:00:01+00:00',
+      finished_at: '2026-07-13T10:00:02+00:00',
+      created_at: '2026-07-13T10:00:00+00:00',
+      updated_at: '2026-07-13T10:00:02+00:00',
       ...overrides,
     },
   };

@@ -135,6 +135,45 @@ src/
   covered by code review and the `getKbPollInterval` unit tests but not a
   live upload.
 
+## Automation notes
+
+- **No update endpoint at all** (`apiResource(...)->except(['update'])`) — a
+  workflow's trigger and steps are fully specified at creation time and never
+  editable afterwards. `CreateWorkflowDialog` is therefore the only form this
+  module has; "editing" a workflow means deleting it and creating a new one.
+  Only `activate`/`pause`/`delete` lifecycle transitions exist post-creation.
+- **Hardcoded enums, no schema-discovery endpoint** — the six event triggers,
+  five condition operators, and two actions (`send_notification`,
+  `log_audit_event`, from `ActionRegistry`) are all hand-copied into
+  `types.ts` since no endpoint lists them or their per-action parameter
+  shapes. If the backend adds a new action or event, this file needs a
+  matching manual update — a real gap the code comments flag.
+- **No manual "run now" trigger** — a workflow only fires from an internal
+  domain event (`AutomationEventSubscriber`) or its own cron schedule
+  (`RunScheduledWorkflowsJob`, runs every minute); there is no API call this
+  UI can make to force a run for testing.
+- **Async, polling job execution**, same shape as Knowledge Base's document
+  processing: `AutomationJobsTable` polls every 3s while any job is
+  `queued`/`running` and stops once everything has settled to
+  `succeeded`/`failed` (`getAutomationJobPollInterval`, unit-tested in
+  isolation like `getKbPollInterval`). Retry is only offered on a `failed`
+  job and only to `automation.manage` holders.
+- **Owner/Admin only, no Member tier** — unlike Ticketing and Knowledge Base,
+  this module has no broader authenticated-member access at all; both
+  `/automation/workflows` and `/automation/jobs` are gated behind
+  `automation.view`, matching the backend policy exactly.
+- No Integrations page — FRONTEND.md describes an `IntegrationsPage` for
+  OAuth connect/disconnect, but there is zero backend support for it (no
+  routes, controllers, or tables); excluded from scope, same as the
+  discrepancies noted in every other module's FRONTEND.md.
+- Verified via typecheck/lint/unit tests (89/89 passing) and manual review of
+  `CreateWorkflowDialog`'s rendered output; a full live create-workflow round
+  trip against the real backend could not be completed in this session due to
+  browser-automation click reliability issues in the sandboxed test browser,
+  not an application defect — the same category of tooling limitation noted
+  for AI Assistant's happy-path streaming and Knowledge Base's live PDF
+  upload.
+
 ## AI Assistant notes
 
 - The send-message endpoint (`POST /ai/conversations/:id/messages`) is a real
