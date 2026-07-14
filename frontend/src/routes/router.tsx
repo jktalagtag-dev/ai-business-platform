@@ -38,6 +38,8 @@ const lazyConversationsList = () =>
   import('@/pages/ai/ConversationsListPage').then((m) => ({ Component: m.ConversationsListPage }));
 const lazyConversationDetail = () =>
   import('@/pages/ai/ConversationDetailPage').then((m) => ({ Component: m.ConversationDetailPage }));
+const lazyKnowledgeBase = () =>
+  import('@/pages/kb/KnowledgeBasePage').then((m) => ({ Component: m.KnowledgeBasePage }));
 
 export const router = createBrowserRouter([
   {
@@ -89,7 +91,7 @@ export const router = createBrowserRouter([
           {
             element: <RequireAbility ability="knowledge_base.view" />,
             children: [
-              { path: paths.knowledgeBase, element: <ComingSoonPage title="Knowledge Base" /> },
+              { path: paths.knowledgeBase, lazy: lazyKnowledgeBase },
             ],
           },
           {

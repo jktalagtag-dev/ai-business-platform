@@ -8,6 +8,7 @@ import type {
 import type { DepartmentResource, EmployeeResource, PositionResource } from '@/modules/employee/types';
 import type { TicketResource } from '@/modules/ticket/types';
 import type { AiConversationResource, AiMessageResource } from '@/modules/ai/types';
+import type { KbDocumentResource } from '@/modules/kb/types';
 
 export function makeAuthResource(overrides?: {
   permissions?: string[];
@@ -212,6 +213,27 @@ export function makeAiMessageResource(
       prompt_tokens: null,
       completion_tokens: null,
       created_at: '2026-07-13T10:00:00+00:00',
+      ...overrides,
+    },
+  };
+}
+
+export function makeKbDocumentResource(
+  overrides?: Partial<KbDocumentResource['attributes']> & { id?: string }
+): KbDocumentResource {
+  return {
+    id: overrides?.id ?? 'document_1',
+    type: 'kb_document',
+    attributes: {
+      title: 'Employee Handbook',
+      original_filename: 'handbook.pdf',
+      mime_type: 'application/pdf',
+      size_bytes: 204800,
+      status: 'ready',
+      error_message: null,
+      page_count: 2,
+      created_at: '2026-07-13T10:00:00+00:00',
+      updated_at: '2026-07-13T10:00:05+00:00',
       ...overrides,
     },
   };

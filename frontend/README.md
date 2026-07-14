@@ -6,26 +6,31 @@ Stack: React Router (data router), TanStack Query, Tailwind + shadcn/ui
 for the full design.
 
 > **Status:** Slice 1 (**Foundation + Auth**), Slice 2 (**Inventory**), Slice 3
-> (**Employee/HR**), Slice 4 (**Ticketing**), and Slice 5 (**AI Assistant**)
-> are done. Inventory covers Categories, Products, Suppliers, and Stock
-> (levels/adjust/movements) as one tabbed page — there is no Warehouses or
-> Purchase Orders UI, since those don't exist in the backend; stock is tracked
-> per product only. Employee/HR covers Departments + Positions (one tabbed
-> page), a full Employees list/detail (with avatar upload and notes), and a
-> self-service "My Profile" view — there is no Leave Request workflow, since
-> `on_leave` is just a manually-set status with no backend support behind it.
-> Ticketing covers a filterable/sortable list with quick-filter chips and a
-> stats bar, a detail page with the full assign/status/close/reopen action
-> set, comments (with policy-mirrored internal-note visibility), and
-> attachments — there is no Ticket Categories admin page, since ticket
-> "category" is just the fixed `type` enum, not a real backend resource. AI
-> Assistant covers a conversation list, a streaming chat detail page (hand-
-> rolled SSE parsing over `fetch`, since the endpoint is a POST with an auth
-> header — `EventSource` can't be used), and inline tool-call/citation
-> visibility — there is no conversation rename, no message edit/delete, and
-> no per-message citations field, since none of those exist in the backend.
-> Every other module's nav item still routes to a "coming soon" placeholder
-> and will be filled in one slice at a time.
+> (**Employee/HR**), Slice 4 (**Ticketing**), Slice 5 (**AI Assistant**), and
+> Slice 6 (**Knowledge Base**) are done. Inventory covers Categories,
+> Products, Suppliers, and Stock (levels/adjust/movements) as one tabbed page
+> — there is no Warehouses or Purchase Orders UI, since those don't exist in
+> the backend; stock is tracked per product only. Employee/HR covers
+> Departments + Positions (one tabbed page), a full Employees list/detail
+> (with avatar upload and notes), and a self-service "My Profile" view — there
+> is no Leave Request workflow, since `on_leave` is just a manually-set status
+> with no backend support behind it. Ticketing covers a filterable/sortable
+> list with quick-filter chips and a stats bar, a detail page with the full
+> assign/status/close/reopen action set, comments (with policy-mirrored
+> internal-note visibility), and attachments — there is no Ticket Categories
+> admin page, since ticket "category" is just the fixed `type` enum, not a
+> real backend resource. AI Assistant covers a conversation list, a streaming
+> chat detail page (hand-rolled SSE parsing over `fetch`, since the endpoint
+> is a POST with an auth header — `EventSource` can't be used), and inline
+> tool-call/citation visibility — there is no conversation rename, no message
+> edit/delete, and no per-message citations field, since none of those exist
+> in the backend. Knowledge Base covers PDF upload with background-processing
+> status polling and a single-shot "Ask" panel with citations, rendered as a
+> client-side-only chat history — there is no article/wiki editor despite
+> FRONTEND.md describing one, since the real system has no content-editing
+> endpoint at all, only upload/list/delete. Every other module's nav item
+> still routes to a "coming soon" placeholder and will be filled in one slice
+> at a time.
 
 ## Prerequisites
 
@@ -87,9 +92,48 @@ src/
                employee/ (services, hooks, forms, components, types)
                ticket/ (services, hooks, forms, components, types)
                ai/ (services, hooks, components, types, mapMessage)
-  pages/       auth/, settings/, errors/, inventory/, hr/, tickets/, ai/, DashboardPage, ComingSoonPage
+               kb/ (services, hooks, components, types)
+  pages/       auth/, settings/, errors/, inventory/, hr/, tickets/, ai/, kb/, DashboardPage, ComingSoonPage
   tests/       setup, fixtures
 ```
+
+## Knowledge Base notes
+
+- One page (`/knowledge-base`, tabbed Ask | Documents) — no separate document
+  detail route, since `DocumentResource` is just metadata (title, filename,
+  size, status, page count, error message) already fully shown in the list
+  row; there's no content/text-view endpoint to link out to.
+- **Upload is asynchronous**: `POST /documents` returns immediately with
+  `status: 'processing'` while text extraction/chunking/embedding runs in a
+  background queue job, with no push notification on completion.
+  `useDocuments` polls every 3s (`refetchInterval`) only while at least one
+  row is still `processing`, and stops once everything has settled to
+  `ready`/`failed` — the polling decision is a pure exported function
+  (`getKbPollInterval`) so it's unit-tested without mounting a real query.
+- A `failed` document shows its `error_message` inline in the row (e.g. "No
+  extractable text was found in this document") — there is no re-process
+  endpoint, so the only recovery is delete-and-re-upload.
+- **`/ask` is a single request/response, not streaming** — despite internally
+  calling the same `AiProviderInterface::stream()` as AI Assistant, the
+  controller discards the delta callback and waits for the full answer.
+  Nothing is persisted server-side (unlike AI Assistant's conversations), so
+  `AskPanel`'s chat-style history is purely client-side state that clears on
+  refresh — asking again doesn't reload or continue anything from before.
+- Citations (`{number, document_id, title, chunk_index, page_number,
+  snippet, score}`) are rendered numbered to match the `[1]`/`[2]` markers
+  the backend instructs the model to emit in the answer text. `snippet` is
+  the only chunk content ever exposed — full chunk text and the embedding
+  vector never leave the backend.
+- Verified live against the real backend: asking with zero documents
+  uploaded correctly hit the backend's canned "no knowledge base content"
+  fallback with no LLM call made (confirmed via network inspection — only
+  one request, no OpenAI round-trip needed), and the client-side "choose a
+  file first" upload guard correctly blocked a request from firing. A real
+  end-to-end PDF upload could not be exercised in this session — the
+  sandboxed browser used for smoke testing can't drive a native OS file
+  picker, so the upload → background-processing → status-polling path is
+  covered by code review and the `getKbPollInterval` unit tests but not a
+  live upload.
 
 ## AI Assistant notes
 
