@@ -1,0 +1,150 @@
+import type { AuthResource } from '@/modules/auth/types';
+import type {
+  CategoryResource,
+  InventoryItemResource,
+  ProductResource,
+  SupplierResource,
+} from '@/modules/inventory/types';
+import type { DepartmentResource, EmployeeResource, PositionResource } from '@/modules/employee/types';
+
+export function makeAuthResource(overrides?: {
+  permissions?: string[];
+  roleName?: string;
+}): AuthResource {
+  return {
+    token: 'test-token',
+    user: {
+      id: 'user_1',
+      type: 'user',
+      attributes: { name: 'Ada Lovelace', email: 'ada@example.com', email_verified_at: null },
+    },
+    membership: {
+      id: 'membership_1',
+      type: 'tenant_membership',
+      attributes: {
+        tenant: { id: 'tenant_1', name: 'Analytical Engines', slug: 'analytical-engines' },
+        role: {
+          id: 'role_1',
+          name: overrides?.roleName ?? 'Owner',
+          permissions: overrides?.permissions ?? ['products.view', 'products.manage'],
+        },
+        status: 'active',
+      },
+    },
+  };
+}
+
+export function makeCategoryResource(overrides?: Partial<CategoryResource['attributes']> & { id?: string }): CategoryResource {
+  return {
+    id: overrides?.id ?? 'category_1',
+    type: 'category',
+    attributes: { name: 'Electronics', parent_category_id: null, ...overrides },
+  };
+}
+
+export function makeProductResource(overrides?: Partial<ProductResource['attributes']> & { id?: string }): ProductResource {
+  return {
+    id: overrides?.id ?? 'product_1',
+    type: 'product',
+    attributes: {
+      sku: 'WIDGET-001',
+      name: 'Widget',
+      description: null,
+      category_id: null,
+      unit_price: '19.99',
+      cost_price: '9.50',
+      is_active: true,
+      ...overrides,
+    },
+  };
+}
+
+export function makeSupplierResource(overrides?: Partial<SupplierResource['attributes']> & { id?: string }): SupplierResource {
+  return {
+    id: overrides?.id ?? 'supplier_1',
+    type: 'supplier',
+    attributes: {
+      name: 'Acme Supplies Ltd.',
+      contact_email: null,
+      contact_phone: null,
+      address: null,
+      status: 'active',
+      ...overrides,
+    },
+  };
+}
+
+export function makeInventoryItemResource(
+  overrides?: Partial<InventoryItemResource['attributes']> & { id?: string }
+): InventoryItemResource {
+  return {
+    id: overrides?.id ?? 'inventory_item_1',
+    type: 'inventory_item',
+    attributes: {
+      product_id: 'product_1',
+      product_sku: 'WIDGET-001',
+      product_name: 'Widget',
+      quantity_on_hand: 120,
+      quantity_reserved: 5,
+      reorder_point: 10,
+      reorder_quantity: 50,
+      is_low_stock: false,
+      ...overrides,
+    },
+  };
+}
+
+export function makeDepartmentResource(
+  overrides?: Partial<DepartmentResource['attributes']> & { id?: string }
+): DepartmentResource {
+  return {
+    id: overrides?.id ?? 'department_1',
+    type: 'department',
+    attributes: {
+      name: 'Engineering',
+      description: null,
+      parent_department_id: null,
+      manager_employee_id: null,
+      ...overrides,
+    },
+  };
+}
+
+export function makePositionResource(
+  overrides?: Partial<PositionResource['attributes']> & { id?: string }
+): PositionResource {
+  return {
+    id: overrides?.id ?? 'position_1',
+    type: 'position',
+    attributes: { title: 'Software Engineer', description: null, ...overrides },
+  };
+}
+
+export function makeEmployeeResource(
+  overrides?: Partial<EmployeeResource['attributes']> & { id?: string }
+): EmployeeResource {
+  return {
+    id: overrides?.id ?? 'employee_1',
+    type: 'employee',
+    attributes: {
+      employee_number: 'EMP-000123',
+      first_name: 'Jane',
+      last_name: 'Doe',
+      full_name: 'Jane Doe',
+      email: 'jane@example.com',
+      phone: null,
+      department_id: null,
+      position_id: null,
+      manager_employee_id: null,
+      employment_type: 'full_time',
+      employment_status: 'active',
+      hire_date: '2025-01-15',
+      termination_date: null,
+      address: null,
+      emergency_contact: null,
+      avatar_url: null,
+      bio: null,
+      ...overrides,
+    },
+  };
+}

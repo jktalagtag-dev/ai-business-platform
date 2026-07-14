@@ -1,0 +1,3378 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+        "title": "AI Business Platform API",
+        "description": "Authentication & RBAC endpoints for the AI Business Platform. See ARCHITECTURE.md, API.md, and BACKEND.md in the repository root for the full system design.",
+        "version": "1.0.0"
+    },
+    "servers": [
+        {
+            "url": "/",
+            "description": "Current server"
+        }
+    ],
+    "paths": {
+        "/api/v1/ai/conversations/{conversation}/messages": {
+            "get": {
+                "tags": [
+                    "AI Assistant"
+                ],
+                "summary": "List message history for a conversation (conversation history)",
+                "operationId": "05c3b83f54d6dce1f24c21ff270df7bb",
+                "parameters": [
+                    {
+                        "name": "conversation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Messages returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "AI Assistant"
+                ],
+                "summary": "Send a message and stream the assistant's reply (text/event-stream)",
+                "description": "SSE frames: `user_message`, `delta` (incremental content), `tool_call`, `tool_result`, `message` (final content + token usage), `error`.",
+                "operationId": "02e55835376d44af54205bbb56d04934",
+                "parameters": [
+                    {
+                        "name": "conversation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "content"
+                                ],
+                                "properties": {
+                                    "content": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "text/event-stream of chat events"
+                    },
+                    "403": {
+                        "description": "Not the owner of this conversation"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/ai/conversations": {
+            "get": {
+                "tags": [
+                    "AI Assistant"
+                ],
+                "summary": "List the caller's own AI conversations",
+                "operationId": "856a28c2df0688381095bfa9010e443e",
+                "responses": {
+                    "200": {
+                        "description": "Conversations returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "AI Assistant"
+                ],
+                "summary": "Start a new AI conversation",
+                "operationId": "be6d9695c9da8d6680420eb422ff7107",
+                "requestBody": {
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "system_prompt": {
+                                        "description": "Falls back to the configured default when omitted",
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "model": {
+                                        "description": "Falls back to the configured default model when omitted",
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Conversation created"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/ai/conversations/{conversation}": {
+            "get": {
+                "tags": [
+                    "AI Assistant"
+                ],
+                "summary": "Get a single conversation",
+                "operationId": "5bd5f0363be81db8dd9fae1bdf377127",
+                "parameters": [
+                    {
+                        "name": "conversation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Conversation returned"
+                    },
+                    "403": {
+                        "description": "Not the owner"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "AI Assistant"
+                ],
+                "summary": "Delete a conversation and its message history",
+                "operationId": "e212dd9aacd18ef2c796f66a9557cbad",
+                "parameters": [
+                    {
+                        "name": "conversation",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/audit-logs": {
+            "get": {
+                "tags": [
+                    "Audit Logs"
+                ],
+                "summary": "List audit log entries. Requires the owner or admin role.",
+                "operationId": "bcf845a5965a047f5f0a438c58c91fa1",
+                "parameters": [
+                    {
+                        "name": "subject_type",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "subject_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Audit log entries returned"
+                    },
+                    "403": {
+                        "description": "Caller does not hold the owner or admin role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/automation/jobs": {
+            "get": {
+                "tags": [
+                    "Automation"
+                ],
+                "summary": "List workflow run history (execution instances)",
+                "operationId": "4a914f4cae2d26fa04ce8cb0b4ca3a71",
+                "parameters": [
+                    {
+                        "name": "workflow_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "description": "queued|running|succeeded|failed",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Jobs returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/automation/jobs/{job}": {
+            "get": {
+                "tags": [
+                    "Automation"
+                ],
+                "summary": "Get a single job run",
+                "operationId": "8a69e0cf2e7ed1694f43db6ace029956",
+                "parameters": [
+                    {
+                        "name": "job",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job returned"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/automation/jobs/{job}/steps": {
+            "get": {
+                "tags": [
+                    "Automation"
+                ],
+                "summary": "Per-step audit trail for one job run",
+                "operationId": "e40d0cbc2062de4e11b9b6e504f9eb53",
+                "parameters": [
+                    {
+                        "name": "job",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Steps returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/automation/jobs/{job}/retry": {
+            "post": {
+                "tags": [
+                    "Automation"
+                ],
+                "summary": "Retry a failed job (resets attempts and re-dispatches)",
+                "operationId": "dcba650b9523d98f70a99613d518bb8c",
+                "parameters": [
+                    {
+                        "name": "job",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Job re-queued"
+                    },
+                    "400": {
+                        "description": "Job is not in a retryable (failed) state"
+                    },
+                    "403": {
+                        "description": "Missing automation.manage permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/automation/workflows": {
+            "get": {
+                "tags": [
+                    "Automation"
+                ],
+                "summary": "List workflows",
+                "operationId": "3eb20966478e67d2e66434dc40fc64b5",
+                "responses": {
+                    "200": {
+                        "description": "Workflows returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Automation"
+                ],
+                "summary": "Create a workflow (starts as draft — activate separately)",
+                "operationId": "35ce605ce5ed355bd0b4e7e99fc9e916",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "steps"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "steps": {
+                                        "description": "Ordered: exactly one trigger step first, then any condition steps, then one or more action steps",
+                                        "type": "array",
+                                        "items": {
+                                            "properties": {
+                                                "type": {
+                                                    "type": "string",
+                                                    "enum": [
+                                                        "trigger",
+                                                        "condition",
+                                                        "action"
+                                                    ]
+                                                },
+                                                "config": {
+                                                    "type": "object"
+                                                }
+                                            },
+                                            "type": "object"
+                                        }
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Workflow created"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    },
+                    "403": {
+                        "description": "Missing automation.manage permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/automation/workflows/{workflow}": {
+            "get": {
+                "tags": [
+                    "Automation"
+                ],
+                "summary": "Get a single workflow",
+                "operationId": "1b126cd715d409b7aa186d382d50fee9",
+                "parameters": [
+                    {
+                        "name": "workflow",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Workflow returned"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Automation"
+                ],
+                "summary": "Delete a workflow and its run history",
+                "operationId": "bdf06b6a126978754300d78187ec32e1",
+                "parameters": [
+                    {
+                        "name": "workflow",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/automation/workflows/{workflow}/steps": {
+            "get": {
+                "tags": [
+                    "Automation"
+                ],
+                "summary": "List a workflow's ordered steps",
+                "operationId": "b52e6f67e7a17eecca75e31996ca3671",
+                "parameters": [
+                    {
+                        "name": "workflow",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Steps returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/automation/workflows/{workflow}/activate": {
+            "post": {
+                "tags": [
+                    "Automation"
+                ],
+                "summary": "Activate a workflow so it starts matching its trigger",
+                "operationId": "fe97d93596977f31b224652eb969439e",
+                "parameters": [
+                    {
+                        "name": "workflow",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Workflow activated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/automation/workflows/{workflow}/pause": {
+            "post": {
+                "tags": [
+                    "Automation"
+                ],
+                "summary": "Pause a workflow so it stops matching its trigger",
+                "operationId": "355dbb78cca08f1d76bf7d4bd2a2ca2c",
+                "parameters": [
+                    {
+                        "name": "workflow",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Workflow paused"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/departments": {
+            "get": {
+                "tags": [
+                    "Employees / Departments"
+                ],
+                "summary": "List departments",
+                "operationId": "d95b07a781098d1b536c3c4262652a99",
+                "responses": {
+                    "200": {
+                        "description": "Departments returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Employees / Departments"
+                ],
+                "summary": "Create a department",
+                "operationId": "2654028b301cd9579e56602bcb8ad764",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Engineering"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "parent_department_id": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "manager_employee_id": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Department created"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/departments/{department}": {
+            "get": {
+                "tags": [
+                    "Employees / Departments"
+                ],
+                "summary": "Get a single department",
+                "operationId": "0e4449213a36bd26f0442c2e9db34580",
+                "parameters": [
+                    {
+                        "name": "department",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Department returned"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Employees / Departments"
+                ],
+                "summary": "Delete a department",
+                "operationId": "1fc3964d076539b850ce18f62dc7b8a5",
+                "parameters": [
+                    {
+                        "name": "department",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Department deleted"
+                    },
+                    "403": {
+                        "description": "Missing departments.manage permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Employees / Departments"
+                ],
+                "summary": "Update a department",
+                "operationId": "0097b0dc76f68fbbf274aed7aa2b8731",
+                "parameters": [
+                    {
+                        "name": "department",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "parent_department_id": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "manager_employee_id": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Department updated"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/employees": {
+            "get": {
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "List employees — full directory for Owner/Admin/HR, department-scoped for managers",
+                "operationId": "ebc786767076450e76aaad14eecebc05",
+                "parameters": [
+                    {
+                        "name": "department_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "position_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "employment_status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "manager_employee_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "description": "Matches name, email, or employee number",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "sort",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "first_name",
+                                "last_name",
+                                "hire_date",
+                                "created_at"
+                            ]
+                        }
+                    },
+                    {
+                        "name": "direction",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "enum": [
+                                "asc",
+                                "desc"
+                            ]
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Employees returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "Create an employee (system-generates the employee number). Requires Admin, HR, or Owner.",
+                "operationId": "832921d380d564a74f783afee77f78fe",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "first_name",
+                                    "last_name",
+                                    "hire_date"
+                                ],
+                                "properties": {
+                                    "user_id": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "first_name": {
+                                        "type": "string"
+                                    },
+                                    "last_name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "nullable": true
+                                    },
+                                    "phone": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "department_id": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "position_id": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "manager_employee_id": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "employment_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "full_time",
+                                            "part_time",
+                                            "contractor",
+                                            "intern"
+                                        ]
+                                    },
+                                    "employment_status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "on_leave",
+                                            "suspended",
+                                            "terminated"
+                                        ]
+                                    },
+                                    "hire_date": {
+                                        "type": "string",
+                                        "format": "date"
+                                    },
+                                    "address": {
+                                        "type": "object",
+                                        "nullable": true
+                                    },
+                                    "emergency_contact": {
+                                        "type": "object",
+                                        "nullable": true
+                                    },
+                                    "bio": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Employee created"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    },
+                    "403": {
+                        "description": "Missing employees.manage permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/employees/me": {
+            "get": {
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "Get the authenticated user's own employee profile",
+                "operationId": "aa2b47dad58cc8e00d4835e0d6f0bfdf",
+                "responses": {
+                    "200": {
+                        "description": "Profile returned"
+                    },
+                    "404": {
+                        "description": "No employee record is linked to this account"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/employees/{employee}": {
+            "get": {
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "Get a single employee",
+                "operationId": "d0b012a682df5d590fb41b7ee73a6676",
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Employee returned"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "Archive (soft-delete) an employee",
+                "operationId": "d37a3c2019f07c2fa16aa57590dbeb53",
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Employee archived"
+                    },
+                    "403": {
+                        "description": "Missing employees.manage permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "Update an employee. Employees may update their own contact/profile fields; only Admin/HR/Owner may change department, position, manager, status, or dates.",
+                "operationId": "88adc52a51df3bb742f561a5c896b59d",
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Employee updated"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    },
+                    "403": {
+                        "description": "Not authorized to change one or more of the submitted fields"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/employees/{employee}/avatar": {
+            "post": {
+                "tags": [
+                    "Employees"
+                ],
+                "summary": "Upload a profile picture",
+                "operationId": "bc7b695ac843369fd7b6c3031fa3f9ae",
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "avatar"
+                                ],
+                                "properties": {
+                                    "avatar": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Avatar uploaded"
+                    },
+                    "422": {
+                        "description": "Validation failed (not an image, or too large)"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/employees/{employee}/notes": {
+            "get": {
+                "tags": [
+                    "Employees / Notes"
+                ],
+                "summary": "List notes for an employee",
+                "operationId": "5a52e642b93b530360352d2d935b0522",
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Notes returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Employees / Notes"
+                ],
+                "summary": "Add a note to an employee",
+                "operationId": "0d88a61145808c385bc59cf4cbed46e4",
+                "parameters": [
+                    {
+                        "name": "employee",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "note"
+                                ],
+                                "properties": {
+                                    "note": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Note created"
+                    },
+                    "403": {
+                        "description": "Not authorized to add notes for this employee"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/positions": {
+            "get": {
+                "tags": [
+                    "Employees / Positions"
+                ],
+                "summary": "List positions",
+                "operationId": "951f16c30e98098d2bebbbbfda1175df",
+                "responses": {
+                    "200": {
+                        "description": "Positions returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Employees / Positions"
+                ],
+                "summary": "Create a position",
+                "operationId": "f924e0831a9362a60a2a8e2e5da0bc1b",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string",
+                                        "example": "Software Engineer"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Position created"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/positions/{position}": {
+            "get": {
+                "tags": [
+                    "Employees / Positions"
+                ],
+                "summary": "Get a single position",
+                "operationId": "cec089064500c3ae43203fecd497dbfa",
+                "parameters": [
+                    {
+                        "name": "position",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Position returned"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Employees / Positions"
+                ],
+                "summary": "Delete a position",
+                "operationId": "35bcb440b1a754f6da7b4e9b1843d710",
+                "parameters": [
+                    {
+                        "name": "position",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Position deleted"
+                    },
+                    "403": {
+                        "description": "Missing positions.manage permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Employees / Positions"
+                ],
+                "summary": "Update a position",
+                "operationId": "bd45f1de598db8fa0b310bb004790cba",
+                "parameters": [
+                    {
+                        "name": "position",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "title"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Position updated"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/categories": {
+            "get": {
+                "tags": [
+                    "Inventory / Categories"
+                ],
+                "summary": "List product categories",
+                "operationId": "e79c08cc869da1f951c833ed9a0cb71e",
+                "responses": {
+                    "200": {
+                        "description": "Categories returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Inventory / Categories"
+                ],
+                "summary": "Create a product category",
+                "operationId": "931434ed5e96309f518c08940830ffe8",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Electronics"
+                                    },
+                                    "parent_category_id": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Category created"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    },
+                    "403": {
+                        "description": "Missing categories.manage permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/categories/{category}": {
+            "get": {
+                "tags": [
+                    "Inventory / Categories"
+                ],
+                "summary": "Get a single category",
+                "operationId": "1a495879748c63d81659b1cf4f42eac8",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category returned"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Inventory / Categories"
+                ],
+                "summary": "Delete a category",
+                "operationId": "a89af3711d27234ee4f25ac13acfec0c",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Category deleted"
+                    },
+                    "403": {
+                        "description": "Missing categories.manage permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Inventory / Categories"
+                ],
+                "summary": "Update a category",
+                "operationId": "dfc2ae21572ed4bb7613018e68e9e9ae",
+                "parameters": [
+                    {
+                        "name": "category",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "parent_category_id": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Category updated"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products": {
+            "get": {
+                "tags": [
+                    "Inventory / Products"
+                ],
+                "summary": "List products",
+                "operationId": "4b15acb9dba7b4d577588e71f53f93be",
+                "parameters": [
+                    {
+                        "name": "category_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "is_active",
+                        "in": "query",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Products returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Inventory / Products"
+                ],
+                "summary": "Create a product (also provisions its stock record)",
+                "operationId": "049e36dafb20c3c4ebfdc7357d5abd03",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "sku",
+                                    "name",
+                                    "unit_price",
+                                    "cost_price"
+                                ],
+                                "properties": {
+                                    "sku": {
+                                        "type": "string",
+                                        "example": "WIDGET-001"
+                                    },
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Widget"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "category_id": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "unit_price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 19.99
+                                    },
+                                    "cost_price": {
+                                        "type": "number",
+                                        "format": "float",
+                                        "example": 9.5
+                                    },
+                                    "is_active": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Product created"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/products/{product}": {
+            "get": {
+                "tags": [
+                    "Inventory / Products"
+                ],
+                "summary": "Get a single product",
+                "operationId": "1a5cb601b3dc74723d46a9fce673a227",
+                "parameters": [
+                    {
+                        "name": "product",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product returned"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Inventory / Products"
+                ],
+                "summary": "Delete a product",
+                "operationId": "986b7934e881e252b5f1d48c852bc250",
+                "parameters": [
+                    {
+                        "name": "product",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Product deleted"
+                    },
+                    "403": {
+                        "description": "Missing products.manage permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Inventory / Products"
+                ],
+                "summary": "Update a product",
+                "operationId": "e7116df51d555439acfddc6b36b75926",
+                "parameters": [
+                    {
+                        "name": "product",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "sku",
+                                    "name",
+                                    "unit_price",
+                                    "cost_price"
+                                ],
+                                "properties": {
+                                    "sku": {
+                                        "type": "string"
+                                    },
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "category_id": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "unit_price": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "cost_price": {
+                                        "type": "number",
+                                        "format": "float"
+                                    },
+                                    "is_active": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Product updated"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stock": {
+            "get": {
+                "tags": [
+                    "Inventory / Stock"
+                ],
+                "summary": "List stock levels",
+                "operationId": "8c44ba12ba26c0e2e2f7c137745af468",
+                "parameters": [
+                    {
+                        "name": "low_stock",
+                        "in": "query",
+                        "description": "Only items at or below their reorder point",
+                        "schema": {
+                            "type": "boolean"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock levels returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stock/{product}": {
+            "get": {
+                "tags": [
+                    "Inventory / Stock"
+                ],
+                "summary": "Get one product's stock level",
+                "operationId": "958c7a4d4f8c2021d47deebb27a62159",
+                "parameters": [
+                    {
+                        "name": "product",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Stock level returned"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stock/{product}/adjust": {
+            "post": {
+                "tags": [
+                    "Inventory / Stock"
+                ],
+                "summary": "Adjust stock quantity, recording a movement in the ledger",
+                "operationId": "8f9e67872ceef068582103ff81a86b3a",
+                "parameters": [
+                    {
+                        "name": "product",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "quantity",
+                                    "movement_type"
+                                ],
+                                "properties": {
+                                    "quantity": {
+                                        "description": "Signed delta: positive for inbound, negative for outbound",
+                                        "type": "integer",
+                                        "example": 50
+                                    },
+                                    "movement_type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "inbound",
+                                            "outbound",
+                                            "adjustment"
+                                        ]
+                                    },
+                                    "reason": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Stock adjusted"
+                    },
+                    "422": {
+                        "description": "Validation failed or insufficient stock"
+                    },
+                    "403": {
+                        "description": "Missing inventory.manage permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/stock/{product}/movements": {
+            "get": {
+                "tags": [
+                    "Inventory / Stock"
+                ],
+                "summary": "List a product's stock movement ledger",
+                "operationId": "497ffece77fd581e8367326adb9d2d45",
+                "parameters": [
+                    {
+                        "name": "product",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Movements returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/suppliers": {
+            "get": {
+                "tags": [
+                    "Inventory / Suppliers"
+                ],
+                "summary": "List suppliers",
+                "operationId": "a82a163c5d0e532a247082981d5b976e",
+                "parameters": [
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Suppliers returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Inventory / Suppliers"
+                ],
+                "summary": "Create a supplier",
+                "operationId": "6a696f5a1b747e741f33b97009c21112",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Acme Supplies Ltd."
+                                    },
+                                    "contact_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "nullable": true
+                                    },
+                                    "contact_phone": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "address": {
+                                        "type": "object",
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "inactive"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Supplier created"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/suppliers/{supplier}": {
+            "get": {
+                "tags": [
+                    "Inventory / Suppliers"
+                ],
+                "summary": "Get a single supplier",
+                "operationId": "a883f89b78d68b23a0132cc1ce9a186e",
+                "parameters": [
+                    {
+                        "name": "supplier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supplier returned"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Inventory / Suppliers"
+                ],
+                "summary": "Delete a supplier",
+                "operationId": "fc5250e229b501fb9f09827f101245a8",
+                "parameters": [
+                    {
+                        "name": "supplier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Supplier deleted"
+                    },
+                    "403": {
+                        "description": "Missing suppliers.manage permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Inventory / Suppliers"
+                ],
+                "summary": "Update a supplier",
+                "operationId": "b1a6af763548d31d985b6b08c741a472",
+                "parameters": [
+                    {
+                        "name": "supplier",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "contact_email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "nullable": true
+                                    },
+                                    "contact_phone": {
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "address": {
+                                        "type": "object",
+                                        "nullable": true
+                                    },
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "active",
+                                            "inactive"
+                                        ]
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Supplier updated"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/knowledge-base/ask": {
+            "post": {
+                "tags": [
+                    "Knowledge Base"
+                ],
+                "summary": "Ask a question answered from the knowledge base, with citations",
+                "operationId": "34c5755a2d74b1bb0b607959dc27c0d2",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "query"
+                                ],
+                                "properties": {
+                                    "query": {
+                                        "type": "string"
+                                    },
+                                    "top_k": {
+                                        "description": "Defaults to config(knowledge_base.top_k)",
+                                        "type": "integer",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Answer with citations returned"
+                    },
+                    "403": {
+                        "description": "Missing knowledge_base.view permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/knowledge-base/documents": {
+            "get": {
+                "tags": [
+                    "Knowledge Base"
+                ],
+                "summary": "List uploaded documents",
+                "operationId": "e0131ccb5d69bfa2e4dd9e58cf3b472e",
+                "responses": {
+                    "200": {
+                        "description": "Documents returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Knowledge Base"
+                ],
+                "summary": "Upload a PDF document (multipart/form-data). Processing (extraction, chunking, embedding) runs asynchronously.",
+                "operationId": "16c2513c68d6ffc99446f3efa4575efa",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "title": {
+                                        "description": "Defaults to the original filename when omitted",
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Document accepted, status \"processing\""
+                    },
+                    "422": {
+                        "description": "Validation failed (e.g. not a PDF, too large)"
+                    },
+                    "403": {
+                        "description": "Missing knowledge_base.manage permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/knowledge-base/documents/{document}": {
+            "get": {
+                "tags": [
+                    "Knowledge Base"
+                ],
+                "summary": "Get a single document, including its processing status",
+                "operationId": "b9f4b7be9340e5d5f5b71acb2ebb9f2b",
+                "parameters": [
+                    {
+                        "name": "document",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Document returned"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "delete": {
+                "tags": [
+                    "Knowledge Base"
+                ],
+                "summary": "Delete a document and its chunks",
+                "operationId": "c9c136885fc2f9d6f6b9f0418a973268",
+                "parameters": [
+                    {
+                        "name": "document",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Deleted"
+                    },
+                    "403": {
+                        "description": "Missing knowledge_base.manage permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/auth/register": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Register a new user and their tenant",
+                "operationId": "6ed3d13396af40662910a631b98840fb",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email",
+                                    "password",
+                                    "password_confirmation",
+                                    "tenant_name"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string",
+                                        "example": "Ada Lovelace"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email",
+                                        "example": "ada@example.com"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "Passw0rd!123"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password",
+                                        "example": "Passw0rd!123"
+                                    },
+                                    "tenant_name": {
+                                        "type": "string",
+                                        "example": "Analytical Engines Inc."
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Account and tenant created, token issued"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/login": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Authenticate and receive a Sanctum token",
+                "operationId": "37d9353c22233210f80b187a4550b320",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "password"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    },
+                                    "tenant_slug": {
+                                        "description": "Required only when the account belongs to multiple tenants",
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Authenticated"
+                    },
+                    "409": {
+                        "description": "Account belongs to multiple tenants, tenant_slug required"
+                    },
+                    "422": {
+                        "description": "Invalid credentials"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/logout": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Revoke the current access token",
+                "operationId": "9abf7bf06a901f8f722a3b024b2688a5",
+                "responses": {
+                    "200": {
+                        "description": "Logged out"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/auth/forgot-password": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Request a password reset link",
+                "operationId": "b9db4bc264eea2c5a236b33476666259",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Generic confirmation, regardless of whether the email exists"
+                    }
+                }
+            }
+        },
+        "/api/v1/auth/reset-password": {
+            "post": {
+                "tags": [
+                    "Auth"
+                ],
+                "summary": "Reset a password using a reset token",
+                "operationId": "646b791d2c600476b00fb9bfe087b52d",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "email",
+                                    "token",
+                                    "password",
+                                    "password_confirmation"
+                                ],
+                                "properties": {
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    },
+                                    "token": {
+                                        "type": "string"
+                                    },
+                                    "password": {
+                                        "type": "string",
+                                        "format": "password"
+                                    },
+                                    "password_confirmation": {
+                                        "type": "string",
+                                        "format": "password"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Password reset"
+                    },
+                    "422": {
+                        "description": "Invalid or expired token"
+                    }
+                }
+            }
+        },
+        "/api/v1/profile": {
+            "get": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Get the authenticated user's profile and tenant memberships",
+                "operationId": "106e5ecbe3647bdf0b034fc396abd729",
+                "responses": {
+                    "200": {
+                        "description": "Profile returned"
+                    },
+                    "401": {
+                        "description": "Unauthenticated"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Profile"
+                ],
+                "summary": "Update the authenticated user's name and email",
+                "operationId": "8ff4f1c955dc213e5d2177a28e198446",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "name",
+                                    "email"
+                                ],
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "email": {
+                                        "type": "string",
+                                        "format": "email"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Profile updated"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/roles": {
+            "get": {
+                "tags": [
+                    "Roles"
+                ],
+                "summary": "List assignable system roles. Requires the owner or admin role.",
+                "operationId": "c58dd3a89d3540e4d34dadafe614574a",
+                "responses": {
+                    "200": {
+                        "description": "Roles returned"
+                    },
+                    "403": {
+                        "description": "Caller does not hold the owner or admin role"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/tickets/{ticket}/attachments": {
+            "get": {
+                "tags": [
+                    "Ticket Attachments"
+                ],
+                "summary": "List attachments for a ticket",
+                "operationId": "9271c290d994ed31ae9d664965c740ad",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Attachments returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Ticket Attachments"
+                ],
+                "summary": "Upload an attachment (multipart/form-data, field name \"file\", max 10MB)",
+                "operationId": "6de9b925e30a018a5a188dda0ac54858",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "multipart/form-data": {
+                            "schema": {
+                                "required": [
+                                    "file"
+                                ],
+                                "properties": {
+                                    "file": {
+                                        "type": "string",
+                                        "format": "binary"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Attachment uploaded"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/tickets/{ticket}/comments": {
+            "get": {
+                "tags": [
+                    "Ticket Comments"
+                ],
+                "summary": "List comments for a ticket. Internal notes are only included for staff with addInternalNote rights.",
+                "operationId": "4d6577e042751f515d12261928dfa604",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Comments returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Ticket Comments"
+                ],
+                "summary": "Add a comment. Set is_internal=true for a technician/admin-only note (requester cannot).",
+                "operationId": "5cb5998a0c9a86a81bda6e9a0b15d8b4",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "body"
+                                ],
+                                "properties": {
+                                    "body": {
+                                        "type": "string"
+                                    },
+                                    "is_internal": {
+                                        "type": "boolean",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Comment created"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/tickets": {
+            "get": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "List tickets — full directory for Owner/Admin, department-scoped for managers, self-scoped otherwise",
+                "operationId": "bf10061b6019df6a10d1841db3e85dc7",
+                "parameters": [
+                    {
+                        "name": "employee_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "ticket_number",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "status",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "priority",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "department_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "assigned_technician_id",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "search",
+                        "in": "query",
+                        "schema": {
+                            "type": "string"
+                        }
+                    },
+                    {
+                        "name": "date_from",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "date_to",
+                        "in": "query",
+                        "schema": {
+                            "type": "string",
+                            "format": "date"
+                        }
+                    },
+                    {
+                        "name": "quick_filter",
+                        "in": "query",
+                        "description": "open | resolved | critical | my_tickets | unassigned",
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Tickets returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Create a ticket (system-generates the ticket number). Any employee may create one for themselves.",
+                "operationId": "bfcc9f20524f041f88d849c6cba1cb27",
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "type",
+                                    "priority",
+                                    "subject",
+                                    "description"
+                                ],
+                                "properties": {
+                                    "employee_id": {
+                                        "description": "Owner/Admin only — defaults to the caller",
+                                        "type": "string",
+                                        "nullable": true
+                                    },
+                                    "type": {
+                                        "type": "string",
+                                        "enum": [
+                                            "hardware",
+                                            "software",
+                                            "network",
+                                            "account_access",
+                                            "printer",
+                                            "email",
+                                            "security",
+                                            "other"
+                                        ]
+                                    },
+                                    "priority": {
+                                        "type": "string",
+                                        "enum": [
+                                            "low",
+                                            "medium",
+                                            "high",
+                                            "critical"
+                                        ]
+                                    },
+                                    "subject": {
+                                        "type": "string"
+                                    },
+                                    "description": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "201": {
+                        "description": "Ticket created"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/tickets/statistics": {
+            "get": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Dashboard statistics: open/closed counts, average resolution time, breakdowns by department/priority/technician",
+                "operationId": "49689bc6871c566ebf7031998b545262",
+                "responses": {
+                    "200": {
+                        "description": "Statistics returned"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/tickets/{ticket}": {
+            "get": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Get a single ticket",
+                "operationId": "1e860752aae0a5687f5fab6375409e30",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket returned"
+                    },
+                    "404": {
+                        "description": "Not found"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            },
+            "patch": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Update ticket content (type, priority, subject, description, resolution notes)",
+                "operationId": "96b722c7a704fa82f0e43303698fc223",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket updated"
+                    },
+                    "422": {
+                        "description": "Validation failed"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/tickets/{ticket}/assign": {
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Assign or reassign a technician. Admin only.",
+                "operationId": "efa81ad38ea697bc4f8f8a290db0fb1b",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "technician_employee_id"
+                                ],
+                                "properties": {
+                                    "technician_employee_id": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ticket assigned"
+                    },
+                    "403": {
+                        "description": "Missing tickets.manage permission"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/tickets/{ticket}/status": {
+            "patch": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Change ticket status (not to/from closed — use /close and /reopen for those)",
+                "operationId": "149ceb51bf86a8653a26d31055973d13",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "status"
+                                ],
+                                "properties": {
+                                    "status": {
+                                        "type": "string",
+                                        "enum": [
+                                            "open",
+                                            "assigned",
+                                            "in_progress",
+                                            "waiting_for_user",
+                                            "resolved",
+                                            "cancelled"
+                                        ]
+                                    },
+                                    "note": {
+                                        "type": "string",
+                                        "nullable": true
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Status changed"
+                    },
+                    "400": {
+                        "description": "Invalid transition (e.g. already closed/cancelled)"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/tickets/{ticket}/close": {
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Close a ticket with resolution notes",
+                "operationId": "a849f941fd0bd72919febbbccac5b820",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "requestBody": {
+                    "required": true,
+                    "content": {
+                        "application/json": {
+                            "schema": {
+                                "required": [
+                                    "resolution_notes"
+                                ],
+                                "properties": {
+                                    "resolution_notes": {
+                                        "type": "string"
+                                    }
+                                },
+                                "type": "object"
+                            }
+                        }
+                    }
+                },
+                "responses": {
+                    "200": {
+                        "description": "Ticket closed"
+                    },
+                    "422": {
+                        "description": "resolution_notes required"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        },
+        "/api/v1/tickets/{ticket}/reopen": {
+            "post": {
+                "tags": [
+                    "Tickets"
+                ],
+                "summary": "Reopen a resolved or closed ticket",
+                "operationId": "f343a4d0840c540a1e3af952d888fa49",
+                "parameters": [
+                    {
+                        "name": "ticket",
+                        "in": "path",
+                        "required": true,
+                        "schema": {
+                            "type": "string"
+                        }
+                    }
+                ],
+                "responses": {
+                    "200": {
+                        "description": "Ticket reopened"
+                    },
+                    "400": {
+                        "description": "Ticket is not in a reopenable state"
+                    }
+                },
+                "security": [
+                    {
+                        "sanctum": []
+                    }
+                ]
+            }
+        }
+    },
+    "components": {
+        "securitySchemes": {
+            "sanctum": {
+                "type": "http",
+                "description": "Send the token returned by /api/v1/auth/register or /api/v1/auth/login as 'Authorization: Bearer {token}'.",
+                "bearerFormat": "Sanctum personal access token",
+                "scheme": "bearer"
+            }
+        }
+    },
+    "tags": [
+        {
+            "name": "AI Assistant",
+            "description": "AI conversations, message history, and chat"
+        },
+        {
+            "name": "Audit Logs",
+            "description": "Read-only audit trail, owner/admin only"
+        },
+        {
+            "name": "Automation",
+            "description": "Event-driven and scheduled workflow automation"
+        },
+        {
+            "name": "Employees / Departments",
+            "description": "Departments, optionally hierarchical"
+        },
+        {
+            "name": "Employees",
+            "description": "Employee directory, profiles, and lifecycle"
+        },
+        {
+            "name": "Employees / Notes",
+            "description": "Internal notes about an employee"
+        },
+        {
+            "name": "Employees / Positions",
+            "description": "Job positions"
+        },
+        {
+            "name": "Inventory / Categories",
+            "description": "Product categories"
+        },
+        {
+            "name": "Inventory / Products",
+            "description": "Products catalogue"
+        },
+        {
+            "name": "Inventory / Stock",
+            "description": "Stock levels and movement ledger, one record per product"
+        },
+        {
+            "name": "Inventory / Suppliers",
+            "description": "Suppliers"
+        },
+        {
+            "name": "Knowledge Base",
+            "description": "PDF document upload, processing, and management"
+        },
+        {
+            "name": "Auth",
+            "description": "Registration, login, logout, and password reset"
+        },
+        {
+            "name": "Profile",
+            "description": "The authenticated user's own profile"
+        },
+        {
+            "name": "Roles",
+            "description": "System roles available for assignment (Owner/Admin/Member-restricted)"
+        },
+        {
+            "name": "Ticket Attachments",
+            "description": "File attachments on a ticket"
+        },
+        {
+            "name": "Ticket Comments",
+            "description": "Comments and internal notes on a ticket"
+        },
+        {
+            "name": "Tickets",
+            "description": "IT support tickets"
+        }
+    ]
+}
