@@ -1,9 +1,9 @@
-import { BarChart3 } from 'lucide-react';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { PageHeader } from '@/components/layout/PageHeader';
-import { EmptyState } from '@/components/layout/EmptyState';
 import { useAuth } from '@/hooks/useAuth';
 import { useTenant } from '@/hooks/useTenant';
+import { TicketStatsBar } from '@/modules/ticket/components/TicketStatsBar';
+import { TicketPriorityChart } from '@/modules/ticket/components/TicketPriorityChart';
 
 export function DashboardPage() {
   const { user, role } = useAuth();
@@ -51,11 +51,16 @@ export function DashboardPage() {
       </div>
 
       <div className="mt-6">
-        <EmptyState
-          icon={BarChart3}
-          title="Dashboard analytics are coming soon"
-          description="Charts (sales trend, ticket volume, inventory health) will appear here once reporting endpoints are available."
-        />
+        <TicketStatsBar />
+
+        <Card>
+          <CardHeader>
+            <CardTitle>Tickets by priority</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <TicketPriorityChart />
+          </CardContent>
+        </Card>
       </div>
     </>
   );

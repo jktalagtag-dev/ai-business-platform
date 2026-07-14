@@ -5,9 +5,11 @@ Stack: React Router (data router), TanStack Query, Tailwind + shadcn/ui
 (Radix), Zustand, React Hook Form + Zod. See [`../FRONTEND.md`](../FRONTEND.md)
 for the full design.
 
-> **Status:** Slice 1 (**Foundation + Auth**), Slice 2 (**Inventory**), Slice 3
-> (**Employee/HR**), Slice 4 (**Ticketing**), Slice 5 (**AI Assistant**), and
-> Slice 6 (**Knowledge Base**) are done. Inventory covers Categories,
+> **Status:** All planned slices are done — Slice 1 (**Foundation + Auth**),
+> Slice 2 (**Inventory**), Slice 3 (**Employee/HR**), Slice 4 (**Ticketing**),
+> Slice 5 (**AI Assistant**), Slice 6 (**Knowledge Base**), Slice 7
+> (**Automation**), Slice 8 (**Audit Log**), and the **Dashboard**. Inventory
+> covers Categories,
 > Products, Suppliers, and Stock (levels/adjust/movements) as one tabbed page
 > — there is no Warehouses or Purchase Orders UI, since those don't exist in
 > the backend; stock is tracked per product only. Employee/HR covers
@@ -28,9 +30,18 @@ for the full design.
 > status polling and a single-shot "Ask" panel with citations, rendered as a
 > client-side-only chat history — there is no article/wiki editor despite
 > FRONTEND.md describing one, since the real system has no content-editing
-> endpoint at all, only upload/list/delete. Every other module's nav item
-> still routes to a "coming soon" placeholder and will be filled in one slice
-> at a time.
+> endpoint at all, only upload/list/delete. Slice 7 (**Automation**) covers a
+> create-only workflow builder (trigger + condition/action steps, immutable
+> once created, since there is no update endpoint), workflow lifecycle
+> controls, and a polling automation-jobs view — there is no manual "run now"
+> trigger or Integrations page, since neither exists in the backend. Slice 8
+> (**Audit Log**) covers a read-only, role-gated (Owner/Admin) list against
+> the shared `audit_logs` table. The **Dashboard** renders the one real
+> aggregate endpoint in the whole backend (`GET /tickets/statistics`) as stat
+> tiles and a by-priority bar chart — every other widget FRONTEND.md
+> envisions (sales trend, inventory health, automation job rates) needs new
+> `/v1/reports/*` endpoints that don't exist yet, so they're intentionally
+> left out rather than faked.
 
 ## Prerequisites
 
@@ -93,7 +104,10 @@ src/
                ticket/ (services, hooks, forms, components, types)
                ai/ (services, hooks, components, types, mapMessage)
                kb/ (services, hooks, components, types)
-  pages/       auth/, settings/, errors/, inventory/, hr/, tickets/, ai/, kb/, DashboardPage, ComingSoonPage
+               automation/ (services, hooks, forms, components, types)
+               audit/ (services, hooks, types)
+  pages/       auth/, settings/, errors/, inventory/, hr/, tickets/, ai/, kb/,
+               automation/, audit/, DashboardPage, ComingSoonPage
   tests/       setup, fixtures
 ```
 
@@ -336,3 +350,35 @@ src/
   Owner session and the real `GET /audit-logs` request returns `200 OK` with
   an empty `data: []` (this tenant hasn't triggered any audited action yet) —
   a legitimate empty state, not an error.
+
+## Dashboard notes
+
+- **Scoped to the one real aggregate endpoint in the backend**:
+  `GET /tickets/statistics` — reused directly (`TicketStatsBar`, already built
+  for the Tickets page) plus a new `TicketPriorityChart` rendering the same
+  response's `by_priority` breakdown in full. No other module exposes a
+  count/summary endpoint (confirmed by a full route sweep for
+  stats/summary/dashboard/analytics/overview/aggregate), so no other widgets
+  were built.
+- FRONTEND.md's dashboard chart table describes a sales trend, an inventory
+  health donut, and an automation job success-rate sparkline — none of these
+  are buildable today: there's no Sales module at all, Inventory's cursor
+  pagination has no `total` field (so even a "low stock count" can't be had
+  without paginating the entire result set client-side), and Automation has
+  no job-count-by-status endpoint. FRONTEND.md itself flags this and says new
+  `/v1/reports/*` endpoints are needed first — this slice deliberately doesn't
+  guess at those shapes.
+- `TicketPriorityChart` is a small hand-rolled SVG/CSS bar chart, not a
+  charting library — four fixed categories (low/medium/high/critical) don't
+  justify a new dependency, and none was installed. Bar colors reuse
+  `TicketPriorityBadge`'s exact semantic mapping (secondary/primary/amber/
+  destructive) so priority colors stay consistent across the app.
+- The `/tickets/statistics` endpoint has no dedicated ability gate — like the
+  Tickets list itself, it's reachable by any authenticated member and scoped
+  server-side (a plain member sees only their own tickets' totals; a
+  `tickets.view` holder sees tenant-wide totals) — so the Dashboard widgets
+  render unconditionally, same as `TicketStatsBar` already did.
+- Verified live against the real backend: the Dashboard renders both widgets
+  correctly for this tenant's zero-ticket state (all counts show `0`, no
+  crash), confirming the empty-data path works; a populated tenant wasn't
+  available in this session to check with non-zero values.
