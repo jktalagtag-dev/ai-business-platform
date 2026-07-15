@@ -6,6 +6,7 @@ use App\Domain\Shared\Exceptions\DomainException;
 use App\Domain\Shared\Exceptions\EmailAlreadyRegisteredException;
 use App\Domain\Shared\Exceptions\InsufficientStockException;
 use App\Domain\Shared\Exceptions\InvalidCredentialsException;
+use App\Domain\Shared\Exceptions\InvalidTechnicianAssignmentException;
 use App\Domain\Shared\Exceptions\PasswordResetFailedException;
 use App\Http\Middleware\AttachRequestId;
 use App\Http\Middleware\EnsureUserHasRole;
@@ -99,6 +100,13 @@ return Application::configure(basePath: dirname(__DIR__))
             'validation_failed',
             $e->getMessage(),
             [['field' => 'quantity', 'message' => $e->getMessage()]],
+            422
+        ));
+
+        $exceptions->render(fn (InvalidTechnicianAssignmentException $e, Request $request) => ApiResponse::error(
+            'validation_failed',
+            $e->getMessage(),
+            [['field' => 'technician_employee_id', 'message' => $e->getMessage()]],
             422
         ));
 

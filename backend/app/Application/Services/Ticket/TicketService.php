@@ -14,6 +14,7 @@ use App\Application\Events\Ticket\TicketAssigned;
 use App\Application\Events\Ticket\TicketCreated;
 use App\Application\Events\Ticket\TicketStatusChanged;
 use App\Application\Services\Audit\AuditLogService;
+use App\Domain\Shared\Exceptions\InvalidTechnicianAssignmentException;
 use App\Domain\Shared\Exceptions\InvalidTicketStatusTransitionException;
 use App\Domain\Ticket\Ticket;
 use Illuminate\Auth\Access\AuthorizationException;
@@ -127,7 +128,13 @@ final class TicketService
 
         Gate::forUser($actor)->authorize('assign', $existing);
 
-        $this->employees->findById($technicianEmployeeId) ?? throw new ModelNotFoundException;
+        $technician = $this->employees->findById($technicianEmployeeId) ?? throw new ModelNotFoundException;
+
+        if ($existing->departmentId !== null && $technician->departmentId !== $existing->departmentId) {
+            throw new InvalidTechnicianAssignmentException(
+                "The technician must belong to the ticket's department."
+            );
+        }
 
         $previousTechnicianId = $existing->assignedTechnicianId;
         $newStatus = $existing->status === 'open' ? 'assigned' : $existing->status;

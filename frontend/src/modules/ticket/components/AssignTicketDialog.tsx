@@ -62,7 +62,12 @@ export function AssignTicketDialog({
                 <FormItem>
                   <FormLabel>Technician</FormLabel>
                   <FormControl>
-                    <EmployeeSelect value={field.value} onChange={field.onChange} placeholder="Choose…" />
+                    <EmployeeSelect
+                      value={field.value}
+                      onChange={field.onChange}
+                      placeholder="Choose…"
+                      departmentId={ticket.attributes.department_id ?? undefined}
+                    />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

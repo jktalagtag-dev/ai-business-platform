@@ -5,6 +5,22 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added — Ticket assignment restricted to the ticket's department
+- `TicketService::assign()` previously accepted any employee id in the
+  tenant as a technician, with zero eligibility check beyond the actor
+  holding `tickets.manage`. Now rejects assigning a technician whose
+  `department_id` doesn't match the ticket's own `department_id`, via a new
+  `App\Domain\Shared\Exceptions\InvalidTechnicianAssignmentException`
+  (mirrors `InvalidManagerAssignmentException`'s shape) mapped to a 422 with
+  a `technician_employee_id` field-level error in `bootstrap/app.php`,
+  matching `InsufficientStockException`'s existing pattern so the frontend's
+  `applyApiErrorsToForm` can surface it inline. A ticket with no department
+  (an unlinked requester) isn't restricted — nothing to match against. Paired
+  with a frontend fix scoping the technician picker (`EmployeeSelect`'s new
+  optional `departmentId` prop) to the same rule, so the UI and the API now
+  agree instead of the UI silently allowing choices the API was never
+  actually validating.
+
 ### Added — Demo data seeder
 - `database/seeders/DemoDataSeeder.php`, called from `DatabaseSeeder` after
   `RolePermissionSeeder`: creates a dedicated **Demo Company** tenant (login

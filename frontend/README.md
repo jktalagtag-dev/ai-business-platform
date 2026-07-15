@@ -284,6 +284,17 @@ src/
   live against a real backend during this slice's smoke test; the error
   surfaces cleanly via a toast rather than crashing, but it's a real product
   gap worth knowing about, not a frontend bug.
+- **Technician assignment is scoped to the ticket's own department**:
+  `EmployeeSelect` takes an optional `departmentId` prop (`AssignTicketDialog`
+  passes the ticket's `department_id`), so the picker only lists employees in
+  that department instead of the whole tenant roster. This is enforced on
+  both sides — the backend rejects a cross-department assignment with a 422
+  (`InvalidTechnicianAssignmentException`), not just a UI-layer filter. A
+  ticket with no department (an unlinked requester) isn't restricted, since
+  there's nothing to match against. Deliberately *not* applied to the
+  Department/Employee "manager" pickers elsewhere in `EmployeeSelect` — a
+  manager legitimately can come from outside the unit (shared-services lead,
+  interim manager), so those stay unfiltered.
 
 ## Employee/HR notes
 
@@ -323,6 +334,14 @@ src/
 - Stock adjustment (`POST /stock/{product}/adjust`) takes a signed `quantity`
   (positive for inbound, negative for outbound, either sign for a manual
   adjustment) — enforced client-side by `adjustStockSchema`.
+- The Products tab's "On hand" column is a client-side join, not a backend
+  field — `ProductResource` has no stock data, so `ProductsTab` also fetches
+  `useStock()` and maps `product_id -> quantity_on_hand` itself (mirroring the
+  existing `categoryNameById` pattern). Stock's list endpoint has a
+  server-fixed `per_page=25` with no way to request more, so — like the
+  Manager/Department/Position pickers elsewhere in this app — a tenant with
+  more than 25 stock rows will see some products show `—` instead of a real
+  quantity until that's addressed with a proper backend join.
 
 ## Audit Log notes
 
@@ -393,3 +412,42 @@ src/
   correctly for this tenant's zero-ticket state (all counts show `0`, no
   crash), confirming the empty-data path works; a populated tenant wasn't
   available in this session to check with non-zero values.
+
+## Design system notes
+
+- **Sidebar sticky fix**: the app shell (`layouts/AppLayout.tsx`) used to size
+  itself with `min-h-svh` — a floor, not a ceiling — so the whole document
+  grew with page content and scrolled as one block, sidebar included. Fixed
+  by pinning the shell to `h-svh overflow-hidden` and adding `min-h-0` to the
+  intermediate flex wrapper and to `main` (the classic flexbox gotcha where a
+  flex child's default `min-height: auto` blocks `flex-1` + `overflow-y-auto`
+  from actually doing anything). `main` is now the only scroll container;
+  the sidebar and topbar are unaffected by any page's content length.
+- **Corner radius, shadows, semantic colors, and font are all token-driven** —
+  a single `--radius` bump (0.5rem → 0.75rem in `theme/tokens.css`) softens
+  every Button/Card/Input/Select/Badge at once, since they all derive from it
+  rather than hardcoding their own values (Card previously hardcoded a static
+  `rounded-xl`, inconsistent with everything else — now uses the same
+  token-derived `rounded-lg` class). `success`/`warning` Badge variants used
+  to hardcode raw Tailwind colors (`bg-emerald-600`/`bg-amber-500`) with no
+  dark-mode adjustment at all — replaced with real `--success`/`--warning`
+  CSS variables with distinct light/dark pairs, matching how `--destructive`
+  already worked. A small `boxShadow` scale (`shadow-xs` through
+  `shadow-elevation-3`) replaces the flat default Tailwind `shadow` Card used.
+  The font stack is a refined system-font list (`-apple-system, Segoe UI, ...`
+  in `tailwind.config.ts`) — no new package installed.
+- **Sidebar active state** is a left accent bar (`border-l-2 border-primary`)
+  plus an icon color change (`text-primary`) rather than just a flat
+  background swap — `NavLink`'s render-prop `children` form is used so the
+  icon can react to `isActive` independently of the link's own className.
+- **DataTable sticky header**: `TableHeader` gets `sticky top-0 z-10
+  bg-card` so column headers stay visible while scrolling a long list inside
+  `main`'s own scroll container. Row hover (`hover:bg-muted/50`) was already
+  in place on `TableRow` — no zebra striping was added, since it reads more
+  "enterprise-generic" than the hover-only look most premium SaaS tables use.
+- **Vite/Tailwind gotcha hit during this pass**: after editing
+  `tailwind.config.ts` (new `success`/`warning` colors, `boxShadow` scale,
+  `fontFamily`), the already-running dev server kept serving the old
+  generated CSS — `bg-success` etc. resolved to nothing until the Vite
+  process was restarted. A plain page reload isn't enough for a
+  `tailwind.config.ts` change; restart `npm run dev` after editing it.

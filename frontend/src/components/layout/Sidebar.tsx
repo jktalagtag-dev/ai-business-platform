@@ -32,14 +32,20 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
             onClick={onNavigate}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors',
-                'hover:bg-sidebar-accent',
-                isActive ? 'bg-sidebar-accent text-sidebar-foreground' : 'text-sidebar-foreground/70'
+                'flex items-center gap-3 rounded-md border-l-2 px-3 py-2 text-sm font-medium transition-colors',
+                'hover:bg-sidebar-accent/60',
+                isActive
+                  ? 'border-primary bg-sidebar-accent/60 text-sidebar-foreground'
+                  : 'border-transparent text-sidebar-foreground/70'
               )
             }
           >
-            <Icon className="h-4 w-4 shrink-0" />
-            {item.label}
+            {({ isActive }) => (
+              <>
+                <Icon className={cn('h-4 w-4 shrink-0', isActive && 'text-primary')} />
+                {item.label}
+              </>
+            )}
           </NavLink>
         );
       })}

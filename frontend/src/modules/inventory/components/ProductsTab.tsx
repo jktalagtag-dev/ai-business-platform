@@ -12,6 +12,7 @@ import { toast } from '@/components/ui/sonner';
 import { useAbility } from '@/hooks/useAbility';
 import { useCategories } from '@/modules/inventory/hooks/useCategories';
 import { useDeleteProduct, useProducts } from '@/modules/inventory/hooks/useProducts';
+import { useStock } from '@/modules/inventory/hooks/useStock';
 import { ProductFormDialog } from '@/modules/inventory/components/ProductFormDialog';
 import type { ProductResource } from '@/modules/inventory/types';
 
@@ -21,6 +22,7 @@ const ALL_STATUS = '__all__';
 export function ProductsTab() {
   const canManage = useAbility('products.manage');
   const { data: categoriesPage } = useCategories();
+  const { data: stockPage } = useStock();
 
   const [search, setSearch] = useState('');
   const [categoryId, setCategoryId] = useState(ALL_CATEGORIES);
@@ -46,6 +48,15 @@ export function ProductsTab() {
     return map;
   }, [categoriesPage]);
 
+  /** Stock lists server-fixed per_page=25 with no way to request more — same
+   * known first-page-only limitation already accepted for the Manager/
+   * Department/Position pickers elsewhere in this module. */
+  const quantityByProductId = useMemo(() => {
+    const map = new Map<string, number>();
+    for (const item of stockPage?.items ?? []) map.set(item.attributes.product_id, item.attributes.quantity_on_hand);
+    return map;
+  }, [stockPage]);
+
   function resetToFirstPage<T>(setter: (v: T) => void) {
     return (v: T) => {
       setCursor(undefined);
@@ -65,6 +76,11 @@ export function ProductsTab() {
           if (!id) return <span className="text-muted-foreground">—</span>;
           return categoryNameById.get(id) ?? <span className="text-muted-foreground">—</span>;
         },
+      },
+      {
+        id: 'quantity',
+        header: 'On hand',
+        cell: ({ row }) => quantityByProductId.get(row.original.id) ?? <span className="text-muted-foreground">—</span>,
       },
       {
         id: 'unit_price',
@@ -109,7 +125,7 @@ export function ProductsTab() {
           ]
         : []),
     ],
-    [canManage, categoryNameById]
+    [canManage, categoryNameById, quantityByProductId]
   );
 
   return (
