@@ -5,6 +5,40 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added — Demo data seeder
+- `database/seeders/DemoDataSeeder.php`, called from `DatabaseSeeder` after
+  `RolePermissionSeeder`: creates a dedicated **Demo Company** tenant (login
+  `demo@example.com` / `password123`) and populates 15+ realistic rows in
+  every module — departments, positions, employees, product categories,
+  products, suppliers, stock, workflows, tickets, AI conversations, and
+  Knowledge Base documents — so a fresh `php artisan migrate --seed` gives a
+  fully browsable demo, not an empty shell.
+- Records are created through the real Application Services (not raw
+  Eloquent inserts) wherever that matters — `EmployeeService`,
+  `TicketService`, `WorkflowService`, etc. — so employee/ticket numbering,
+  the auto-provisioned stock record on product creation, and Audit Log
+  entries are all generated exactly like real HTTP-driven usage would
+  produce. Workflows are seeded and activated *before* tickets, so creating
+  the demo tickets fires real `ticket.created`/`ticket.assigned`/
+  `ticket.status_changed` events against them; the seeder then drains the
+  `automation`/`notifications`/`knowledge_base` queues itself
+  (`Artisan::call('queue:work', ['--stop-when-empty' => true])`) so the
+  resulting Automation Jobs and notification jobs already show settled
+  `succeeded`/`failed` statuses rather than sitting `queued` forever.
+- AI conversations/messages and Knowledge Base documents/chunks are the one
+  exception, inserted directly via Eloquent — seeding them "for real" would
+  require a working LLM API key and real PDF files respectively, neither of
+  which a seeder should depend on.
+- Idempotent: a second `db:seed` run is a no-op once the Demo Company tenant
+  exists (checked by name) — delete the tenant (cascading through its rows)
+  to reseed from scratch.
+- Uncovered along the way: Policies in this codebase authorize via the
+  *current Sanctum token's* abilities (`AuthorizesViaTokenAbilities`), not
+  the user/role directly — there's no HTTP request in a console seeder to
+  populate that via middleware, so the seeder explicitly attaches the real
+  token `AuthService::register()` issues to the actor
+  (`$owner->withAccessToken(...)`) before calling any other service.
+
 ### Added — Automation Engine module
 - Event-driven workflow triggers: a single `AutomationEventSubscriber`
   (registered via `Event::subscribe()` from the module's own service

@@ -51,7 +51,18 @@ for the full design.
   cd ../backend
   php artisan migrate --seed
   php artisan serve            # http://127.0.0.1:8000
+  php artisan queue:work --queue=automation,notifications,knowledge_base,default
   ```
+  Seeding creates a **Demo Company** tenant with 15+ realistic rows in every
+  module (departments, positions, employees, categories, products, suppliers,
+  stock, workflows, tickets, automation jobs, AI conversations, Knowledge Base
+  documents, and audit log entries) — log in with `demo@example.com` /
+  `password123`. Re-running `php artisan db:seed` is safe: `DemoDataSeeder`
+  is a no-op once the Demo Company tenant exists (delete it first, cascading
+  through its rows, to reseed from scratch). The queue worker is only needed
+  to see Automation Jobs settle into `succeeded`/`failed` for anything
+  triggered *after* seeding — the seeder itself drains the queue once at the
+  end, so the initial demo data already shows real, settled statuses without it.
 
 ## Run
 
