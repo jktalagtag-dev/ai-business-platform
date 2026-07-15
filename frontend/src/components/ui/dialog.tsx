@@ -3,7 +3,31 @@ import * as DialogPrimitive from '@radix-ui/react-dialog';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/cn';
 
-const Dialog = DialogPrimitive.Root;
+/**
+ * A form's `onSuccess` handler typically fires a toast, invalidates a
+ * query (re-rendering the underlying list), and closes the dialog all in
+ * the same synchronous callback. Batched together, that intermittently
+ * stops Radix's Presence from ever detecting the exit-animation
+ * completion, leaving the dialog stuck fully visible on screen forever
+ * (data-state="closed" but never unmounted). Deferring the true→false
+ * transition by one tick gives it its own isolated commit, so Presence
+ * reliably observes the transition — fixes it for every dialog in the
+ * app from this one place, no per-form changes needed.
+ */
+function Dialog({ open, ...props }: React.ComponentProps<typeof DialogPrimitive.Root>) {
+  const [deferredOpen, setDeferredOpen] = React.useState(open);
+
+  React.useEffect(() => {
+    if (open) {
+      setDeferredOpen(true);
+      return;
+    }
+    const id = setTimeout(() => setDeferredOpen(false), 0);
+    return () => clearTimeout(id);
+  }, [open]);
+
+  return <DialogPrimitive.Root open={deferredOpen} {...props} />;
+}
 const DialogTrigger = DialogPrimitive.Trigger;
 const DialogPortal = DialogPrimitive.Portal;
 const DialogClose = DialogPrimitive.Close;
