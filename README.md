@@ -67,6 +67,12 @@ php artisan migrate --seed
 php artisan serve
 ```
 
+`php artisan serve` is single-threaded and dev-only — it can occasionally
+die while holding open a long-running streaming response (e.g. the AI
+Assistant's SSE chat stream), especially on Windows. If that happens
+during local development, `./serve-dev.sh` runs the same server but
+restarts it automatically if it exits.
+
 `--seed` runs `RolePermissionSeeder`, which provisions the system roles
 (Owner, Admin, HR, Member) and the full permission catalogue — required
 before any tenant can be meaningfully used.
