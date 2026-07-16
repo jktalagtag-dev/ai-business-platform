@@ -297,8 +297,44 @@ keeps a running `total_prompt_tokens`/`total_completion_tokens`.
 **OpenAI-compatible.** The provider (`config('ai.base_url')`, default the
 real OpenAI API) speaks the standard Chat Completions streaming wire
 format, so any compatible endpoint works by changing config alone. The
+project's current default example is **[Gemini](https://ai.google.dev/gemini-api/docs/openai)**
+(`AI_BASE_URL=https://generativelanguage.googleapis.com/v1beta/openai`,
+`AI_MODEL=gemini-2.5-flash`, a real Google AI Studio API key required).
+**Known risk, not yet verified live:** a Google AI Developer Forum report
+describes issues combining `tool_call` deltas with streaming specifically
+on Gemini's compat layer — `ChatService`'s tool-call loop depends on that
+exact combination, so this should be exercised live (a message that
+triggers a tool call) before relying on it, rather than assumed safe from
+wire-format compatibility alone.
+
+A **local [Ollama](https://ollama.com)** instance
+(`AI_BASE_URL=http://localhost:11434/v1`, `AI_MODEL=llama3.1`,
+`AI_API_KEY=ollama` — a non-secret placeholder since Ollama doesn't
+enforce auth locally) and **[OpenRouter](https://openrouter.ai)**
+(`AI_BASE_URL=https://openrouter.ai/api/v1`, `AI_MODEL=openai/gpt-4o` or
+any other OpenRouter model slug) and real OpenAI all work the same way —
+this project has run against all of them at different points without ever
+touching `OpenAiCompatibleProvider`. Optional `AI_SITE_URL`/`AI_SITE_NAME`
+config is sent as OpenRouter's `HTTP-Referer`/`X-Title` attribution
+headers on chat requests when set; other providers ignore them.
+
+Chat and embeddings can point at **different** providers: `AI_EMBEDDING_BASE_URL`/
+`AI_EMBEDDING_API_KEY`/`AI_EMBEDDING_MODEL` default to the chat provider's
+own values but can be set independently, since some providers' embedding-model
+coverage is narrower than their chat coverage (OpenRouter notably) — a
+common setup is chat via one provider with embeddings kept on another. The
 same provider's `/embeddings` endpoint backs the Knowledge Base module
-(§6.6) via `config('ai.embedding_model')`.
+(§6.6); the current default is `gemini-embedding-001` (Google deprecated
+`text-embedding-004`).
+
+**Switching embedding models changes vector dimensionality** (e.g. OpenAI's
+`text-embedding-3-small` is 1536-dim, Gemini's `gemini-embedding-001` is
+configurable — commonly 768 or 1536-dim, Ollama's `nomic-embed-text` is
+768-dim). `kb_document_chunks.embedding` is stored as `jsonb` rather than a
+fixed-width column specifically so this requires no migration, but
+documents already indexed under a different embedding model won't
+cosine-compare meaningfully against new ones — re-upload existing
+documents after switching embedding providers.
 
 ### 6.6 Knowledge Base — endpoint detail
 

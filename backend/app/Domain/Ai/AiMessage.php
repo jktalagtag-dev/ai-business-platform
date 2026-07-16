@@ -38,14 +38,19 @@ final class AiMessage
         }
 
         if ($this->toolCalls !== null) {
-            $message['tool_calls'] = array_map(
-                fn (ToolCall $call): array => [
+            $message['tool_calls'] = array_map(function (ToolCall $call): array {
+                $entry = [
                     'id' => $call->id,
                     'type' => 'function',
                     'function' => ['name' => $call->name, 'arguments' => $call->argumentsJson],
-                ],
-                $this->toolCalls
-            );
+                ];
+
+                if ($call->thoughtSignature !== null) {
+                    $entry['extra_content'] = ['google' => ['thought_signature' => $call->thoughtSignature]];
+                }
+
+                return $entry;
+            }, $this->toolCalls);
         }
 
         if ($this->toolCallId !== null) {

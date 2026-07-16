@@ -5,6 +5,55 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Changed — Default AI Assistant example switched to Gemini
+- No code changes: confirmed [Gemini's OpenAI-compatible endpoint](https://ai.google.dev/gemini-api/docs/openai)
+  (`https://generativelanguage.googleapis.com/v1beta/openai`) supports
+  Chat Completions (streaming + tool-calling) and an Embeddings API, so
+  it's a drop-in for the same generic provider used for
+  OpenRouter/Ollama/OpenAI below — this project's default example provider
+  has moved between all of these at various points without ever touching
+  `OpenAiCompatibleProvider` itself. `backend/.env.example`'s `AI_*` block
+  now defaults to Gemini (`AI_MODEL=gemini-2.5-flash`,
+  `AI_EMBEDDING_MODEL=gemini-embedding-001`, replacing the deprecated
+  `text-embedding-004`), with a comment on swapping to OpenRouter or a
+  local Ollama instead.
+- **Known risk, not yet verified live:** a Google AI Developer Forum report
+  describes issues combining `tool_call` deltas with streaming specifically
+  on Gemini's compat layer. `ChatService`'s tool-call loop relies on that
+  exact combination — this needs a live functional check (ask a question
+  that triggers `GetTicketStatisticsTool`/`SearchKnowledgeBaseTool` mid-turn)
+  before relying on it in practice.
+- Note: switching embedding models changes vector dimensionality (OpenAI's
+  `text-embedding-3-small` is 1536-dim; Gemini's `gemini-embedding-001` is
+  configurable, commonly used at 768 or 1536-dim; Ollama's
+  `nomic-embed-text` is 768-dim). `kb_document_chunks.embedding` is stored
+  as `jsonb` rather than a fixed-width column, so no migration is needed,
+  but any documents already indexed under a different embedding model won't
+  cosine-compare meaningfully against new ones — re-upload existing
+  Knowledge Base documents after switching embedding providers.
+
+### Added — OpenRouter (or any OpenAI-compatible endpoint) support for the AI Assistant
+- The AI chat provider (`App\Infrastructure\AI\OpenAiCompatibleProvider`) was
+  already wire-format compatible with OpenRouter's Chat Completions API, so
+  this is a configuration-level change plus two small additions rather than
+  a new integration: `config/ai.php` now separates the **chat** provider
+  (`AI_BASE_URL`/`AI_API_KEY`/`AI_MODEL`, e.g. pointed at
+  `https://openrouter.ai/api/v1`) from the **embeddings** provider
+  (`AI_EMBEDDING_BASE_URL`/`AI_EMBEDDING_API_KEY`/`AI_EMBEDDING_MODEL`),
+  since OpenRouter's embedding-model coverage is far narrower than its chat
+  coverage — Knowledge Base indexing can keep using a real OpenAI key for
+  `embed()` while chat traffic goes through OpenRouter. Both new pairs
+  default to the existing single-provider values, so an unconfigured
+  install behaves exactly as before.
+- Added optional `AI_SITE_URL`/`AI_SITE_NAME` config, sent as OpenRouter's
+  `HTTP-Referer`/`X-Title` attribution headers on chat requests only when
+  set (no effect on plain OpenAI or other providers that ignore them).
+- Documented all `AI_*` env vars in `backend/.env.example` (previously
+  undocumented there despite being read by `config/ai.php`).
+- New tests: `tests/Feature/Ai/OpenAiCompatibleProviderTest.php` asserts
+  attribution headers are only sent when configured, and that `embed()`
+  hits the embedding-specific base URL/key independently of the chat one.
+
 ### Added — Ticket assignment restricted to the ticket's department
 - `TicketService::assign()` previously accepted any employee id in the
   tenant as a technician, with zero eligibility check beyond the actor

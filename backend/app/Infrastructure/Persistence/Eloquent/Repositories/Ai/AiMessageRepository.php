@@ -68,6 +68,7 @@ final class AiMessageRepository implements AiMessageRepositoryInterface
                     id: $call['id'],
                     name: $call['name'],
                     argumentsJson: $call['arguments'],
+                    thoughtSignature: $call['thought_signature'] ?? null,
                 ),
                 $message->tool_calls
             ),

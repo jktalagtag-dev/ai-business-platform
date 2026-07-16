@@ -17,8 +17,22 @@ return [
     'base_url' => env('AI_BASE_URL', 'https://api.openai.com/v1'),
     'api_key' => env('AI_API_KEY', env('OPENAI_API_KEY')),
     'default_model' => env('AI_MODEL', 'gpt-4o-mini'),
-    'embedding_model' => env('AI_EMBEDDING_MODEL', 'text-embedding-3-small'),
     'request_timeout' => (int) env('AI_REQUEST_TIMEOUT', 60),
+
+    // Embeddings can be routed at a different endpoint than chat completions
+    // (e.g. chat via OpenRouter, embeddings kept on real OpenAI, since
+    // OpenRouter's embedding-model coverage is far narrower than its chat
+    // coverage). Defaults fall back to the chat provider's own values, so a
+    // single-provider setup (the default) is unaffected.
+    'embedding_base_url' => env('AI_EMBEDDING_BASE_URL', env('AI_BASE_URL', 'https://api.openai.com/v1')),
+    'embedding_api_key' => env('AI_EMBEDDING_API_KEY', env('AI_API_KEY', env('OPENAI_API_KEY'))),
+    'embedding_model' => env('AI_EMBEDDING_MODEL', 'text-embedding-3-small'),
+
+    // Optional OpenRouter attribution headers (HTTP-Referer / X-Title) —
+    // purely cosmetic in OpenRouter's own dashboard/rankings, ignored by
+    // plain OpenAI and other providers that don't recognize them.
+    'site_url' => env('AI_SITE_URL'),
+    'site_name' => env('AI_SITE_NAME'),
 
     'default_system_prompt' => env(
         'AI_DEFAULT_SYSTEM_PROMPT',

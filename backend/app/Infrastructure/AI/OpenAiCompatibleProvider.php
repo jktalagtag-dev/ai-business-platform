@@ -24,8 +24,12 @@ final class OpenAiCompatibleProvider implements AiProviderInterface
         private readonly string $baseUrl,
         private readonly string $apiKey,
         private readonly string $model,
+        private readonly string $embeddingBaseUrl,
+        private readonly string $embeddingApiKey,
         private readonly string $embeddingModel,
         private readonly int $timeout,
+        private readonly ?string $siteUrl = null,
+        private readonly ?string $siteName = null,
     ) {}
 
     public function stream(array $messages, array $tools, callable $onDelta): AiCompletionResult
@@ -43,6 +47,10 @@ final class OpenAiCompatibleProvider implements AiProviderInterface
 
         $response = Http::withToken($this->apiKey)
             ->timeout($this->timeout)
+            ->withHeaders(array_filter([
+                'HTTP-Referer' => $this->siteUrl,
+                'X-Title' => $this->siteName,
+            ]))
             ->withOptions(['stream' => true])
             ->post(rtrim($this->baseUrl, '/').'/chat/completions', $payload);
 
@@ -57,9 +65,9 @@ final class OpenAiCompatibleProvider implements AiProviderInterface
 
     public function embed(array $texts): array
     {
-        $response = Http::withToken($this->apiKey)
+        $response = Http::withToken($this->embeddingApiKey)
             ->timeout($this->timeout)
-            ->post(rtrim($this->baseUrl, '/').'/embeddings', [
+            ->post(rtrim($this->embeddingBaseUrl, '/').'/embeddings', [
                 'model' => $this->embeddingModel,
                 'input' => $texts,
             ]);
@@ -131,7 +139,7 @@ final class OpenAiCompatibleProvider implements AiProviderInterface
 
                     foreach ($delta['tool_calls'] ?? [] as $toolCallDelta) {
                         $index = $toolCallDelta['index'] ?? 0;
-                        $toolCallFragments[$index] ??= ['id' => '', 'name' => '', 'arguments' => ''];
+                        $toolCallFragments[$index] ??= ['id' => '', 'name' => '', 'arguments' => '', 'thought_signature' => null];
 
                         if (isset($toolCallDelta['id'])) {
                             $toolCallFragments[$index]['id'] = $toolCallDelta['id'];
@@ -144,6 +152,12 @@ final class OpenAiCompatibleProvider implements AiProviderInterface
                         if (isset($toolCallDelta['function']['arguments'])) {
                             $toolCallFragments[$index]['arguments'] .= $toolCallDelta['function']['arguments'];
                         }
+
+                        // Gemini-specific: required to validate this tool call if it's
+                        // replayed in a later request (see ToolCall::$thoughtSignature).
+                        if (isset($toolCallDelta['extra_content']['google']['thought_signature'])) {
+                            $toolCallFragments[$index]['thought_signature'] = $toolCallDelta['extra_content']['google']['thought_signature'];
+                        }
                     }
                 }
             }
@@ -154,6 +168,7 @@ final class OpenAiCompatibleProvider implements AiProviderInterface
                 id: $fragment['id'],
                 name: $fragment['name'],
                 argumentsJson: $fragment['arguments'] !== '' ? $fragment['arguments'] : '{}',
+                thoughtSignature: $fragment['thought_signature'],
             ),
             $toolCallFragments
         ));

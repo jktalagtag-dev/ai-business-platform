@@ -64,3 +64,30 @@ it('decodes a tool call\'s JSON arguments into an array', function () {
 
     expect($call->argumentsArray())->toBe(['query' => 'grace']);
 });
+
+it('includes extra_content.google.thought_signature on a tool call that has one', function () {
+    $message = makeAiMessage([
+        'role' => 'assistant',
+        'content' => null,
+        'toolCalls' => [new ToolCall('call_1', 'get_current_datetime', '{}', 'opaque-signature')],
+    ]);
+
+    expect($message->toProviderFormat()['tool_calls'])->toBe([
+        [
+            'id' => 'call_1',
+            'type' => 'function',
+            'function' => ['name' => 'get_current_datetime', 'arguments' => '{}'],
+            'extra_content' => ['google' => ['thought_signature' => 'opaque-signature']],
+        ],
+    ]);
+});
+
+it('omits extra_content entirely for a tool call without a thought signature', function () {
+    $message = makeAiMessage([
+        'role' => 'assistant',
+        'content' => null,
+        'toolCalls' => [new ToolCall('call_1', 'get_current_datetime', '{}')],
+    ]);
+
+    expect($message->toProviderFormat()['tool_calls'][0])->not->toHaveKey('extra_content');
+});

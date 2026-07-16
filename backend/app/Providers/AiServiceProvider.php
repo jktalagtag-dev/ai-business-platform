@@ -32,8 +32,12 @@ final class AiServiceProvider extends ServiceProvider
             baseUrl: (string) config('ai.base_url'),
             apiKey: (string) config('ai.api_key'),
             model: (string) config('ai.default_model'),
+            embeddingBaseUrl: (string) config('ai.embedding_base_url'),
+            embeddingApiKey: (string) config('ai.embedding_api_key'),
             embeddingModel: (string) config('ai.embedding_model'),
             timeout: (int) config('ai.request_timeout'),
+            siteUrl: config('ai.site_url'),
+            siteName: config('ai.site_name'),
         ));
 
         $this->app->singleton(AiToolRegistry::class, fn ($app) => new AiToolRegistry([

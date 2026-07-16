@@ -105,7 +105,12 @@ final class ChatService
                 'role' => 'assistant',
                 'content' => $result->content,
                 'tool_calls' => array_map(
-                    fn (ToolCall $c): array => ['id' => $c->id, 'name' => $c->name, 'arguments' => $c->argumentsJson],
+                    fn (ToolCall $c): array => [
+                        'id' => $c->id,
+                        'name' => $c->name,
+                        'arguments' => $c->argumentsJson,
+                        'thought_signature' => $c->thoughtSignature,
+                    ],
                     $result->toolCalls
                 ),
                 'tool_call_id' => null,
