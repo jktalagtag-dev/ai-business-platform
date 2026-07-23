@@ -41,6 +41,36 @@ describe('RequireAuth', () => {
     );
     expect(screen.getByText('secret content')).toBeInTheDocument();
   });
+
+  it('shows the public landing page at the root path when unauthenticated, instead of redirecting', () => {
+    renderAt(
+      '/',
+      <Routes>
+        <Route element={<RequireAuth />}>
+          <Route path="/" element={<div>dashboard</div>} />
+        </Route>
+        <Route path="/login" element={<div>login page</div>} />
+      </Routes>
+    );
+    expect(screen.getByText('The operating system for modern businesses')).toBeInTheDocument();
+    expect(screen.queryByText('login page')).not.toBeInTheDocument();
+    expect(screen.queryByText('dashboard')).not.toBeInTheDocument();
+  });
+
+  it('renders the dashboard route (not the landing page) at the root path when authenticated', () => {
+    useAuthStore.getState().setSession(makeAuthResource());
+    renderAt(
+      '/',
+      <Routes>
+        <Route element={<RequireAuth />}>
+          <Route path="/" element={<div>dashboard</div>} />
+        </Route>
+        <Route path="/login" element={<div>login page</div>} />
+      </Routes>
+    );
+    expect(screen.getByText('dashboard')).toBeInTheDocument();
+    expect(screen.queryByText('The operating system for modern businesses')).not.toBeInTheDocument();
+  });
 });
 
 describe('RequireAbility', () => {
