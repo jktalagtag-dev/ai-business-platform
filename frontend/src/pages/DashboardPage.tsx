@@ -16,8 +16,8 @@ export function DashboardPage() {
         description="Your workspace at a glance."
       />
 
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <Card>
+      <div className="grid grid-cols-12 gap-6">
+        <Card className="col-span-12 sm:col-span-6 lg:col-span-4">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">Organization</CardTitle>
           </CardHeader>
@@ -27,7 +27,7 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="col-span-12 sm:col-span-6 lg:col-span-4">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">Your role</CardTitle>
           </CardHeader>
@@ -39,7 +39,7 @@ export function DashboardPage() {
           </CardContent>
         </Card>
 
-        <Card>
+        <Card className="col-span-12 sm:col-span-6 lg:col-span-4">
           <CardHeader className="pb-2">
             <CardTitle className="text-sm text-muted-foreground">Signed in as</CardTitle>
           </CardHeader>
@@ -50,10 +50,12 @@ export function DashboardPage() {
         </Card>
       </div>
 
-      <div className="mt-6">
-        <TicketStatsBar />
+      <div className="mt-6 grid grid-cols-12 gap-6">
+        <div className="col-span-12">
+          <TicketStatsBar />
+        </div>
 
-        <Card>
+        <Card className="col-span-12">
           <CardHeader>
             <CardTitle>Tickets by priority</CardTitle>
           </CardHeader>

@@ -77,7 +77,7 @@ export function AuditLogPage() {
 
   return (
     <div className="space-y-4">
-      <PageHeader title="Audit Log" />
+      <PageHeader title="Audit Log" description="A record of who changed what, and when." />
 
       <DataTable
         columns={columns}
@@ -86,6 +86,7 @@ export function AuditLogPage() {
         isError={isError}
         onRetry={() => refetch()}
         emptyTitle="No audit log entries yet"
+        exportFilename="audit-log"
         toolbar={
           <>
             <Input

@@ -124,6 +124,7 @@ export function EmployeesListPage() {
     <div>
       <PageHeader
         title="Employees"
+        description="Directory of everyone in your organization."
         actions={
           canManage && (
             <Button onClick={() => setCreateOpen(true)}>
@@ -142,6 +143,7 @@ export function EmployeesListPage() {
         onRetry={() => refetch()}
         emptyTitle="No employees found"
         onRowClick={(employee) => navigate(`${paths.employees}/${employee.id}`)}
+        exportFilename="employees"
         toolbar={
           <>
             <Input

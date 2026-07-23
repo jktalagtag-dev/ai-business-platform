@@ -1,11 +1,32 @@
+import type { LucideIcon } from 'lucide-react';
+import { CircleDot, CheckCircle2, AlertTriangle, Timer } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/cn';
 import { useTicketStatistics } from '@/modules/ticket/hooks/useTicketStatistics';
 
-function Tile({ label, value }: { label: string; value: string }) {
+function Tile({
+  label,
+  value,
+  icon: Icon,
+  accent,
+}: {
+  label: string;
+  value: string;
+  icon: LucideIcon;
+  accent: string;
+}) {
   return (
-    <div className="rounded-lg border p-4">
-      <div className="text-2xl font-semibold tracking-tight">{value}</div>
-      <div className="text-sm text-muted-foreground">{label}</div>
-    </div>
+    <Card>
+      <CardContent className="flex items-center gap-4 p-4">
+        <div className={cn('flex h-10 w-10 shrink-0 items-center justify-center rounded-lg', accent)}>
+          <Icon className="h-5 w-5" strokeWidth={1.75} />
+        </div>
+        <div className="min-w-0">
+          <div className="text-2xl font-semibold tracking-tight">{value}</div>
+          <div className="truncate text-sm text-muted-foreground">{label}</div>
+        </div>
+      </CardContent>
+    </Card>
   );
 }
 
@@ -25,11 +46,31 @@ export function TicketStatsBar() {
         : `${Math.round(data.average_resolution_minutes)}m`;
 
   return (
-    <div className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4">
-      <Tile label="Open" value={String(data.open_count)} />
-      <Tile label="Closed" value={String(data.closed_count)} />
-      <Tile label="Critical" value={String(criticalCount)} />
-      <Tile label="Avg. resolution" value={avgResolution} />
+    <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
+      <Tile
+        label="Open"
+        value={String(data.open_count)}
+        icon={CircleDot}
+        accent="bg-info/15 text-info"
+      />
+      <Tile
+        label="Closed"
+        value={String(data.closed_count)}
+        icon={CheckCircle2}
+        accent="bg-success/15 text-success"
+      />
+      <Tile
+        label="Critical"
+        value={String(criticalCount)}
+        icon={AlertTriangle}
+        accent="bg-destructive/15 text-destructive"
+      />
+      <Tile
+        label="Avg. resolution"
+        value={avgResolution}
+        icon={Timer}
+        accent="bg-primary/15 text-primary"
+      />
     </div>
   );
 }

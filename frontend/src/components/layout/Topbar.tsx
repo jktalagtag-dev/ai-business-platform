@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Menu, Monitor, Moon, Sun, User, LogOut } from 'lucide-react';
+import { Menu, Monitor, Moon, Sparkles, Sun, User, LogOut } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
 import {
@@ -22,17 +22,9 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTenant } from '@/hooks/useTenant';
 import { useTheme } from '@/theme/useTheme';
 import { useLogout } from '@/modules/auth/hooks/useLogout';
+import { initials } from '@/lib/initials';
 import { paths } from '@/routes/routes.config';
-
-function initials(name: string): string {
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-}
+import { useUiStore } from '@/store/uiStore';
 
 export function Topbar() {
   const navigate = useNavigate();
@@ -41,6 +33,8 @@ export function Topbar() {
   const { setTheme } = useTheme();
   const logout = useLogout();
   const [mobileNavOpen, setMobileNavOpen] = useState(false);
+  const aiDockOpen = useUiStore((s) => s.aiDockOpen);
+  const toggleAiDock = useUiStore((s) => s.toggleAiDock);
 
   const onLogout = () => {
     logout.mutate(undefined, {
@@ -49,7 +43,7 @@ export function Topbar() {
   };
 
   return (
-    <header className="flex h-14 items-center gap-3 border-b bg-background px-4">
+    <header className="flex h-16 items-center gap-3 border-b bg-background px-4">
       <Button
         variant="ghost"
         size="icon"
@@ -65,6 +59,16 @@ export function Topbar() {
       </div>
 
       <div className="ml-auto flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="hidden lg:inline-flex"
+          aria-label={aiDockOpen ? 'Close AI assistant' : 'Open AI assistant'}
+          aria-pressed={aiDockOpen}
+          onClick={toggleAiDock}
+        >
+          <Sparkles className="h-5 w-5" strokeWidth={1.75} />
+        </Button>
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-10 gap-2 px-2">

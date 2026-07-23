@@ -91,6 +91,7 @@ export function DepartmentsTab() {
     <div>
       <PageHeader
         title="Departments"
+        description="Your organization's department structure."
         actions={
           canManage && (
             <Button

@@ -14,7 +14,10 @@ export function KnowledgeBasePage() {
 
   return (
     <div>
-      <PageHeader title="Knowledge Base" />
+      <PageHeader
+        title="Knowledge Base"
+        description="Upload documents and get cited answers from them."
+      />
 
       <Tabs value={active} onValueChange={(v) => setActive(v as TabKey)}>
         <TabsList>

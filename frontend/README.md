@@ -451,3 +451,92 @@ src/
   generated CSS — `bg-success` etc. resolved to nothing until the Vite
   process was restarted. A plain page reload isn't enough for a
   `tailwind.config.ts` change; restart `npm run dev` after editing it.
+
+## DESIGN_SYSTEM.md redesign notes
+
+A later, much larger pass than the "Design system notes" above: the root
+[`DESIGN_SYSTEM.md`](../DESIGN_SYSTEM.md) is a complete enterprise design
+language (blue primary, Inter, a 12/20/24px radius scale, zebra tables, a
+280px sidebar, motion tokens) plus three functional requirements — a
+docked AI chat panel, CSV export, and a marketing landing page — adopted
+across nine phases, each its own commit.
+
+- **Tokens** (`theme/tokens.css`, `tailwind.config.ts`): primary is now
+  a `#1E31F0`-family blue (light) / a lightened blue with **dark**
+  foreground text, not white (dark mode) — a light button background
+  needs dark text for contrast, so `--primary-foreground` isn't just
+  reused between themes. Added `--primary-hover`, an `info` color +
+  Badge variant, `--radius-card` (20px) and `--radius-dialog` (24px)
+  alongside the existing 12px `--radius`, a `fontSize` scale matching the
+  doc's display/h1/h2/h3/title/body/small/caption steps, and
+  `transitionDuration` tokens (150/200/250/300/500ms) plus a global
+  `prefers-reduced-motion` override. Font is `@fontsource/inter`
+  (self-hosted, not a Google Fonts `<link>`), the one new package this
+  required.
+- **Primitives**: Button/Input/Select/Textarea are 48px (`h-12`) with
+  12px radius and semibold button text; Card is 20px radius, Dialog 24px;
+  Table rows are zebra-striped (`even:bg-muted/40`) with a blue-tinted
+  hover, replacing the earlier hover-only look.
+- **Chrome**: Sidebar is 280px (was 256px) with 24px `stroke-1.75` icons
+  and a new bottom profile/logout section; Topbar is 64px; page content
+  is capped at `max-w-[1600px]`. Dashboard is a 12-column grid with stat
+  tiles restyled to match `TicketStatsBar`'s icon-accent-box pattern.
+- **CSV export** (`components/data-table/DataTable.tsx`, optional
+  `exportFilename` prop, wired to Employees/Tickets/Products/Audit Log):
+  every column in this app is `{ id, header, cell }` with no
+  `accessorKey`/`accessorFn` anywhere, so there's no raw value to read
+  generically. The exporter instead runs each cell's `cell` render
+  through the same `flexRender` the table body already uses, converts
+  the output to static markup via `react-dom/server`, and extracts
+  `.textContent` (with a tag-boundary space-insertion pass so e.g. an
+  avatar-initial badge next to a name doesn't glue into one word).
+  Bundling `react-dom/server` client-side is a real trade-off — it grew
+  the `DataTable` chunk to ~125KB (~37KB gzipped) — accepted as
+  reasonable for an internal admin tool's table export, not something a
+  public-facing bundle would want. Export is current-page-only, matching
+  this API's cursor pagination (no "export everything across pages").
+- **AI dock** (`components/layout/AiDockPanel.tsx` +
+  `modules/ai/components/AiDockChat.tsx`): a resizable (320–560px, drag
+  the left edge) panel docked to the right of the main content, toggled
+  by a sparkle button in the Topbar, hidden below `lg`. Open state and
+  width persist in `uiStore`. `AiDockChat` is a genuine reuse of the
+  full-page chat, not a second implementation — the same
+  `useChatStream`/`useConversationMessages`/`ChatMessageBubble`/
+  `ChatComposer` hooks and components as `ConversationDetailPage`. It
+  targets whichever conversation the API returns as most recent, and
+  only creates a new one lazily on the dock's first-ever message (via a
+  small pending-message queue that replays once the new conversation's
+  id comes back) — opening the dock never creates an empty conversation
+  on its own. Only mounted while the dock is open, so its queries never
+  fetch in the background for a closed dock.
+- **Landing page** (`pages/marketing/`, root `/`): the app's root path is
+  shared between two audiences. `RequireAuth` special-cases it — an
+  unauthenticated visitor at `/` renders `LandingPage` directly (no
+  `AppLayout` chrome) instead of being redirected to `/login`; every
+  other path's redirect-to-login behavior, and the authenticated
+  dashboard at `/`, are unchanged. The page is Hero → Modules →
+  Automation → AI Assistant → Analytics → Pricing → FAQ → CTA → Footer,
+  all built from this app's own Card/Badge/Button/Accordion components
+  over **fabricated example data** (a signed-out visitor has no tenant
+  to show real numbers for) — deliberately not stock illustrations, and
+  deliberately not inventing integrations, a case study, or testimonials
+  the product doesn't have, per the doc's own instruction not to
+  fabricate content. Pricing's three tiers (Free/Pro/Enterprise) are
+  presentational copy over the existing `tenants.plan` string column
+  (default `'free'`) — no billing system or schema change. The FAQ
+  accordion uses a new `components/ui/accordion.tsx` wrapping
+  `@radix-ui/react-accordion` (added as a dependency; `tailwind.config.ts`
+  already had the `accordion-down`/`accordion-up` keyframes reserved from
+  the original scaffold, so this was expected).
+- **Git history note**: as part of this same body of work, the repo's
+  commit history was rewritten to remove AI co-author trailers before
+  any of the above landed — unrelated to the frontend itself, mentioned
+  here only because it's why this redesign's commits are the oldest ones
+  with clean, human-only authorship.
+- Verified live in both themes at desktop, tablet, and mobile widths
+  after every phase (per this project's established practice of using
+  the browser tools' DOM/computed-style reads rather than trusting
+  screenshots alone) — full gates (`typecheck`/`lint`/`test`/`build`)
+  pass after each commit, with the pre-existing 4
+  `react-refresh/only-export-components` ESLint warnings (unrelated
+  `ui/` files) the only non-clean lint output throughout.

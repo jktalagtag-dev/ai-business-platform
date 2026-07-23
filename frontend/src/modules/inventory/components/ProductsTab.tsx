@@ -132,6 +132,7 @@ export function ProductsTab() {
     <div>
       <PageHeader
         title="Products"
+        description="Manage your product catalog and pricing."
         actions={
           canManage && (
             <Button
@@ -154,6 +155,7 @@ export function ProductsTab() {
         isError={isError}
         onRetry={() => refetch()}
         emptyTitle="No products found"
+        exportFilename="products"
         toolbar={
           <>
             <Input
