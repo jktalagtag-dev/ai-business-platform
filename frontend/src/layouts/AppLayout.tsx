@@ -1,10 +1,11 @@
 import { Suspense } from 'react';
 import { Outlet } from 'react-router-dom';
+import { AiDockPanel } from '@/components/layout/AiDockPanel';
 import { Sidebar } from '@/components/layout/Sidebar';
 import { Topbar } from '@/components/layout/Topbar';
 import { Skeleton } from '@/components/ui/skeleton';
 
-/** Authenticated app shell: persistent sidebar + topbar + routed content. */
+/** Authenticated app shell: persistent sidebar + topbar + routed content + AI dock. */
 export function AppLayout() {
   return (
     <div className="flex h-svh overflow-hidden bg-background">
@@ -19,6 +20,7 @@ export function AppLayout() {
           </div>
         </main>
       </div>
+      <AiDockPanel />
     </div>
   );
 }
