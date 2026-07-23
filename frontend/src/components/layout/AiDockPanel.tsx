@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef } from 'react';
 import { GripVertical, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
+import { AiDockChat } from '@/modules/ai/components/AiDockChat';
 import { useUiStore } from '@/store/uiStore';
 
 /**
@@ -10,8 +11,10 @@ import { useUiStore } from '@/store/uiStore';
  * `lg` (a resizable side dock has no room on narrower viewports — the
  * full-page `/ai/conversations` routes remain the small-screen path).
  *
- * This is the frame only: open/close, drag-to-resize, width persistence.
- * The chat itself (history, composer, streaming) is wired in the next phase.
+ * The frame (open/close, drag-to-resize, width persistence) lives here;
+ * `AiDockChat` owns the actual conversation. Returning null while closed
+ * unmounts `AiDockChat` along with it, so the dock's data hooks only ever
+ * fetch while a user can actually see the panel.
  */
 export function AiDockPanel() {
   const isOpen = useUiStore((s) => s.aiDockOpen);
@@ -82,9 +85,7 @@ export function AiDockPanel() {
         </Button>
       </div>
 
-      <div className="flex flex-1 items-center justify-center overflow-y-auto p-4 text-center text-sm text-muted-foreground">
-        Chat coming soon.
-      </div>
+      <AiDockChat />
     </aside>
   );
 }
