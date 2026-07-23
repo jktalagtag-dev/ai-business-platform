@@ -155,6 +155,7 @@ export function ProductsTab() {
         isError={isError}
         onRetry={() => refetch()}
         emptyTitle="No products found"
+        exportFilename="products"
         toolbar={
           <>
             <Input

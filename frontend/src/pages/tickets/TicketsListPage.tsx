@@ -155,6 +155,7 @@ export function TicketsListPage() {
         onRetry={() => refetch()}
         emptyTitle="No tickets found"
         onRowClick={(ticket) => navigate(`${paths.tickets}/${ticket.id}`)}
+        exportFilename="tickets"
         toolbar={
           <>
             <Input

@@ -86,6 +86,7 @@ export function AuditLogPage() {
         isError={isError}
         onRetry={() => refetch()}
         emptyTitle="No audit log entries yet"
+        exportFilename="audit-log"
         toolbar={
           <>
             <Input
