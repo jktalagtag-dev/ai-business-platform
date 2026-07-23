@@ -31,7 +31,9 @@ const TableRow = React.forwardRef<HTMLTableRowElement, React.HTMLAttributes<HTML
     <tr
       ref={ref}
       className={cn(
-        'border-b transition-colors hover:bg-muted/50 data-[state=selected]:bg-muted',
+        // Alternating rows + a blue-tinted hover (DESIGN_SYSTEM.md's Tables
+        // spec), layered so hover always wins over the zebra stripe.
+        'border-b bg-card transition-colors duration-150 even:bg-muted/40 hover:bg-accent data-[state=selected]:bg-accent',
         className
       )}
       {...props}
@@ -47,7 +49,7 @@ const TableHead = React.forwardRef<
   <th
     ref={ref}
     className={cn(
-      'h-11 whitespace-nowrap px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0',
+      'h-12 whitespace-nowrap px-4 text-left align-middle font-medium text-muted-foreground [&:has([role=checkbox])]:pr-0',
       className
     )}
     {...props}
