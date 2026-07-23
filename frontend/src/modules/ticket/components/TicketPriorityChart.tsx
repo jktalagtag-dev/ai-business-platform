@@ -15,7 +15,7 @@ const LABEL: Record<TicketPriority, string> = {
 const BAR_COLOR: Record<TicketPriority, string> = {
   low: 'bg-secondary-foreground/40',
   medium: 'bg-primary',
-  high: 'bg-amber-500',
+  high: 'bg-warning',
   critical: 'bg-destructive',
 };
 
