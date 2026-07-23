@@ -5,6 +5,33 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
 
 ## [Unreleased]
 
+### Added — Frontend redesign to DESIGN_SYSTEM.md, plus a public landing page
+- Adopted the root [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) design language
+  across the whole frontend, in nine committed phases: blue-primary
+  design tokens (Inter font, a 12/20/24px radius scale, motion tokens),
+  restyled controls/surfaces/tables, a 280px sidebar with a profile/
+  logout footer, a 64px topbar, and a 12-column dashboard grid. See
+  [`frontend/README.md`](frontend/README.md)'s "DESIGN_SYSTEM.md redesign
+  notes" section for full detail, including trade-offs.
+- **CSV export** on the Employees, Tickets, Products, and Audit Log
+  tables — client-side, current-page-only (matches this API's cursor
+  pagination), reusing each column's existing cell renderer rather than
+  requiring a second "exportable value" definition per column.
+- **Docked AI Assistant panel** — a resizable (320–560px), collapsible
+  panel next to the main content on any authenticated page (`lg`+ only),
+  toggled from the Topbar. Reuses the exact same chat hooks/components as
+  the full-page `/ai/conversations/:id` view; only creates a new
+  conversation on its first message, never just from being opened.
+- **Public marketing landing page** at `/` for signed-out visitors (Hero,
+  a module showcase, Automation/AI Assistant/Analytics highlights,
+  pricing over the existing `tenants.plan` values, an FAQ, and a closing
+  CTA) — authenticated users still see the dashboard at the same path.
+  Built entirely from this app's own UI components over illustrative
+  example data; no fabricated integrations, case studies, or
+  testimonials were added.
+- New dependencies: `@fontsource/inter` (self-hosted font) and
+  `@radix-ui/react-accordion` (the landing page's FAQ).
+
 ### Changed — Default AI Assistant example switched to Gemini
 - No code changes: confirmed [Gemini's OpenAI-compatible endpoint](https://ai.google.dev/gemini-api/docs/openai)
   (`https://generativelanguage.googleapis.com/v1beta/openai`) supports

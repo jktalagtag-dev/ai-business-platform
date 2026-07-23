@@ -3,6 +3,19 @@
 Status: Draft v1.0 (design phase, no code written yet)
 Related: [ARCHITECTURE.md](ARCHITECTURE.md) §6 · [API.md](API.md) · [BACKEND.md](BACKEND.md)
 
+> **This document is the original design, written before implementation
+> started, and hasn't been kept in sync — it still describes modules
+> (Sales, Purchase Orders, Warehouses, Integrations, an Article/Wiki
+> editor for Knowledge Base) and libraries (Recharts, Playwright) that
+> were never built, because the backend doesn't support them. For what
+> actually shipped, module by module, including every deliberate
+> deviation from this doc, see [`frontend/README.md`](frontend/README.md)
+> — in particular its "DESIGN_SYSTEM.md redesign notes" section, which
+> covers the visual redesign (tokens, the docked AI Assistant panel, CSV
+> export, and the public marketing landing page at `/`) done against
+> [DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) after the app described here was
+> already built.
+
 Confirmed stack — this supersedes the earlier Next.js proposal in
 ARCHITECTURE.md §6:
 

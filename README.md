@@ -103,5 +103,18 @@ Once the server is running, interactive Swagger docs are served at
 
 ## Frontend
 
-Not yet implemented — see [FRONTEND.md](FRONTEND.md) for the planned
-React + TypeScript + Vite design (React Router, TanStack Query, Tailwind).
+A React + TypeScript + Vite SPA (React Router, TanStack Query, Tailwind +
+shadcn/ui) covering every module above, plus a public marketing landing
+page at `/` for signed-out visitors and a resizable, docked AI Assistant
+panel available from any authenticated page. Styled per
+[DESIGN_SYSTEM.md](DESIGN_SYSTEM.md) — see
+[`frontend/README.md`](frontend/README.md) for setup, the demo login, and
+detailed as-built notes per module (including every place the real
+backend doesn't support something [FRONTEND.md](FRONTEND.md) originally
+described).
+
+```bash
+cd frontend
+npm install
+npm run dev            # http://localhost:5173
+```
