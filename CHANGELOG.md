@@ -44,12 +44,24 @@ Format loosely follows [Keep a Changelog](https://keepachangelog.com/).
   `AI_EMBEDDING_MODEL=gemini-embedding-001`, replacing the deprecated
   `text-embedding-004`), with a comment on swapping to OpenRouter or a
   local Ollama instead.
-- **Known risk, not yet verified live:** a Google AI Developer Forum report
-  describes issues combining `tool_call` deltas with streaming specifically
-  on Gemini's compat layer. `ChatService`'s tool-call loop relies on that
-  exact combination — this needs a live functional check (ask a question
-  that triggers `GetTicketStatisticsTool`/`SearchKnowledgeBaseTool` mid-turn)
-  before relying on it in practice.
+- **Resolved — the risk below was real:** live testing surfaced exactly the
+  Gemini streaming issue this note warned about. Asking a question that
+  triggers two tool calls in the same turn (e.g. "list employees on leave
+  this week" -> `get_current_datetime` + `search_knowledge_base`) produced
+  a single mangled tool name, `get_current_datetimesearch_knowledge_base`,
+  which the backend rejected as unknown and Gemini then rejected the
+  replay of with a 400. Root cause: `OpenAiCompatibleProvider::consumeStream()`
+  accumulates a tool call's name/arguments by `index`, assuming (per
+  OpenAI's wire format) that a given index is only ever reused for
+  continuation chunks of the *same* call — but Gemini's compat layer
+  doesn't reliably increment `index` across distinct tool calls in one
+  turn, so two unrelated calls both landed on index 0 and their names got
+  concatenated. Fixed by detecting a fresh, non-empty `id` that doesn't
+  match what's already accumulated at an index and giving it a new
+  fragment instead of appending to the wrong one. Covered by two new
+  tests in `OpenAiCompatibleProviderTest` (the misreported-index case, and
+  confirming genuine single-call multi-chunk reassembly still works) and
+  verified live end-to-end against Gemini afterward.
 - Note: switching embedding models changes vector dimensionality (OpenAI's
   `text-embedding-3-small` is 1536-dim; Gemini's `gemini-embedding-001` is
   configurable, commonly used at 768 or 1536-dim; Ollama's

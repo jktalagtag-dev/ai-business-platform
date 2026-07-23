@@ -118,6 +118,76 @@ it('leaves thoughtSignature null for a tool_call delta without extra_content', f
     expect($result->toolCalls[0]->thoughtSignature)->toBeNull();
 });
 
+it('does not concatenate two tool calls together when the provider misreports index for both', function () {
+    // Reproduces a real bug seen against Gemini's OpenAI-compat endpoint: two
+    // distinct tool calls ("get_current_datetime" and "search_knowledge_base")
+    // both arrived with index 0 (Gemini's compat layer doesn't reliably
+    // increment it across calls), which used to concatenate their names into
+    // one invalid "get_current_datetimesearch_knowledge_base" tool call that
+    // the backend then rejected as unknown. Each call's id/name/arguments
+    // arrive together in a single delta (Gemini doesn't stream function
+    // calls character-by-character the way OpenAI does), which is what makes
+    // the differing, already-populated id at the same index detectable.
+    $firstCall = json_encode([
+        'choices' => [[
+            'delta' => [
+                'tool_calls' => [[
+                    'index' => 0,
+                    'id' => 'call_1',
+                    'type' => 'function',
+                    'function' => ['name' => 'get_current_datetime', 'arguments' => '{}'],
+                ]],
+            ],
+        ]],
+    ]);
+    $secondCall = json_encode([
+        'choices' => [[
+            'delta' => [
+                'tool_calls' => [[
+                    'index' => 0,
+                    'id' => 'call_2',
+                    'type' => 'function',
+                    'function' => ['name' => 'search_knowledge_base', 'arguments' => '{"query":"leave"}'],
+                ]],
+            ],
+        ]],
+    ]);
+    $body = "data: {$firstCall}\n\ndata: {$secondCall}\n\ndata: [DONE]\n\n";
+
+    Http::fake(['https://openrouter.ai/*' => Http::response($body, 200)]);
+
+    $result = makeProvider()->stream([], [], fn () => null);
+
+    expect($result->toolCalls)->toHaveCount(2);
+    expect($result->toolCalls[0]->id)->toBe('call_1');
+    expect($result->toolCalls[0]->name)->toBe('get_current_datetime');
+    expect($result->toolCalls[1]->id)->toBe('call_2');
+    expect($result->toolCalls[1]->name)->toBe('search_knowledge_base');
+});
+
+it('still reassembles a single tool call whose name is split across multiple chunks at the same index', function () {
+    // The normal OpenAI streaming shape this accumulation exists for: one
+    // tool call's name/arguments arrive in fragments, id only on the first.
+    $chunks = [
+        ['index' => 0, 'id' => 'call_1', 'type' => 'function', 'function' => ['name' => 'get_curr']],
+        ['index' => 0, 'function' => ['name' => 'ent_weather']],
+        ['index' => 0, 'function' => ['arguments' => '{"city":']],
+        ['index' => 0, 'function' => ['arguments' => '"Paris"}']],
+    ];
+    $body = implode('', array_map(
+        fn (array $delta) => 'data: '.json_encode(['choices' => [['delta' => ['tool_calls' => [$delta]]]]])."\n\n",
+        $chunks
+    )).'data: [DONE]'."\n\n";
+
+    Http::fake(['https://openrouter.ai/*' => Http::response($body, 200)]);
+
+    $result = makeProvider()->stream([], [], fn () => null);
+
+    expect($result->toolCalls)->toHaveCount(1);
+    expect($result->toolCalls[0]->name)->toBe('get_current_weather');
+    expect($result->toolCalls[0]->argumentsJson)->toBe('{"city":"Paris"}');
+});
+
 it('sends embeddings to the embedding-specific base url using the embedding api key', function () {
     Http::fake([
         'https://api.openai.com/*' => Http::response(['data' => [

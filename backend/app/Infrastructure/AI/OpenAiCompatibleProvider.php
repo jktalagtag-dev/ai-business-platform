@@ -139,6 +139,27 @@ final class OpenAiCompatibleProvider implements AiProviderInterface
 
                     foreach ($delta['tool_calls'] ?? [] as $toolCallDelta) {
                         $index = $toolCallDelta['index'] ?? 0;
+                        $incomingId = $toolCallDelta['id'] ?? null;
+
+                        // Gemini's OpenAI-compat layer doesn't reliably increment `index`
+                        // across distinct tool calls in the same turn — observed sending
+                        // every call at index 0, which previously concatenated two
+                        // unrelated tool names into one invalid string (e.g.
+                        // "get_current_datetime" + "search_knowledge_base" ->
+                        // "get_current_datetimesearch_knowledge_base"). A fresh non-empty
+                        // `id` that doesn't match what's already accumulated at this index
+                        // means the provider is (re)using the index for a genuinely new
+                        // call, so give it its own fragment instead of appending onto the
+                        // wrong one.
+                        if (
+                            $incomingId !== null && $incomingId !== ''
+                            && isset($toolCallFragments[$index])
+                            && $toolCallFragments[$index]['id'] !== ''
+                            && $toolCallFragments[$index]['id'] !== $incomingId
+                        ) {
+                            $index = count($toolCallFragments);
+                        }
+
                         $toolCallFragments[$index] ??= ['id' => '', 'name' => '', 'arguments' => '', 'thought_signature' => null];
 
                         if (isset($toolCallDelta['id'])) {
