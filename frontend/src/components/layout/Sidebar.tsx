@@ -1,8 +1,13 @@
-import { NavLink } from 'react-router-dom';
+import { Link, NavLink, useNavigate } from 'react-router-dom';
+import { LogOut } from 'lucide-react';
 import { cn } from '@/lib/cn';
+import { initials } from '@/lib/initials';
 import { useAbility } from '@/hooks/useAbility';
 import { useAuth } from '@/hooks/useAuth';
-import { navItems, type NavItem } from '@/routes/routes.config';
+import { useLogout } from '@/modules/auth/hooks/useLogout';
+import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { Button } from '@/components/ui/button';
+import { navItems, paths, type NavItem } from '@/routes/routes.config';
 
 function useVisibleNavItems(): NavItem[] {
   const can = useAbility();
@@ -32,7 +37,7 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
             onClick={onNavigate}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 rounded-md border-l-2 px-3 py-2 text-sm font-medium transition-colors',
+                'flex items-center gap-3 rounded-md border-l-2 px-3 py-2.5 text-sm font-medium transition-colors duration-150',
                 'hover:bg-sidebar-accent/60',
                 isActive
                   ? 'border-primary bg-sidebar-accent/60 text-sidebar-foreground'
@@ -42,7 +47,10 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
           >
             {({ isActive }) => (
               <>
-                <Icon className={cn('h-4 w-4 shrink-0', isActive && 'text-primary')} />
+                <Icon
+                  className={cn('h-6 w-6 shrink-0', isActive && 'text-primary')}
+                  strokeWidth={1.75}
+                />
                 {item.label}
               </>
             )}
@@ -53,14 +61,65 @@ export function SidebarNav({ onNavigate }: { onNavigate?: () => void }) {
   );
 }
 
+/** Compact profile + logout footer, pinned to the bottom of the desktop
+ * sidebar (DESIGN_SYSTEM.md's sidebar spec: nav, then Settings/Profile/
+ * Logout). Theme switching and the fuller account menu stay in the
+ * Topbar's dropdown — this is just the always-visible identity + exit. */
+function SidebarFooter() {
+  const navigate = useNavigate();
+  const { user, role } = useAuth();
+  const logout = useLogout();
+
+  const onLogout = () => {
+    logout.mutate(undefined, {
+      onSettled: () => navigate(paths.login, { replace: true }),
+    });
+  };
+
+  return (
+    <div className="mt-auto border-t border-sidebar-border p-3">
+      <div className="flex items-center gap-2">
+        <Link
+          to={paths.profile}
+          className="flex min-w-0 flex-1 items-center gap-3 rounded-md px-2 py-2 transition-colors duration-150 hover:bg-sidebar-accent/60"
+        >
+          <Avatar className="h-8 w-8 shrink-0">
+            <AvatarFallback>{user ? initials(user.attributes.name) : '?'}</AvatarFallback>
+          </Avatar>
+          <span className="min-w-0 flex-1">
+            <span className="block truncate text-sm font-medium text-sidebar-foreground">
+              {user?.attributes.name}
+            </span>
+            {role && (
+              <span className="block truncate text-xs text-sidebar-foreground/60">
+                {role.name}
+              </span>
+            )}
+          </span>
+        </Link>
+        <Button
+          variant="ghost"
+          size="icon"
+          className="h-8 w-8 shrink-0"
+          aria-label="Log out"
+          onClick={onLogout}
+        >
+          <LogOut className="h-4 w-4" strokeWidth={1.75} />
+        </Button>
+      </div>
+    </div>
+  );
+}
+
 /** Persistent desktop sidebar (hidden below the lg breakpoint). */
 export function Sidebar() {
   return (
-    <aside className="hidden w-64 shrink-0 border-r border-sidebar-border bg-sidebar lg:block">
-      <div className="flex h-14 items-center border-b border-sidebar-border px-5">
+    <aside className="hidden w-[280px] shrink-0 flex-col border-r border-sidebar-border bg-sidebar lg:flex">
+      <div className="flex h-16 items-center border-b border-sidebar-border px-5">
         <span className="font-semibold tracking-tight">AI Business Platform</span>
       </div>
       <SidebarNav />
+      <SidebarFooter />
     </aside>
   );
 }

@@ -22,17 +22,8 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTenant } from '@/hooks/useTenant';
 import { useTheme } from '@/theme/useTheme';
 import { useLogout } from '@/modules/auth/hooks/useLogout';
+import { initials } from '@/lib/initials';
 import { paths } from '@/routes/routes.config';
-
-function initials(name: string): string {
-  return name
-    .split(' ')
-    .map((part) => part[0])
-    .filter(Boolean)
-    .slice(0, 2)
-    .join('')
-    .toUpperCase();
-}
 
 export function Topbar() {
   const navigate = useNavigate();
