@@ -40,7 +40,7 @@ export function Topbar() {
   };
 
   return (
-    <header className="flex h-14 items-center gap-3 border-b bg-background px-4">
+    <header className="flex h-16 items-center gap-3 border-b bg-background px-4">
       <Button
         variant="ghost"
         size="icon"

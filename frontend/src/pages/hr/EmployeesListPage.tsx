@@ -124,6 +124,7 @@ export function EmployeesListPage() {
     <div>
       <PageHeader
         title="Employees"
+        description="Directory of everyone in your organization."
         actions={
           canManage && (
             <Button onClick={() => setCreateOpen(true)}>

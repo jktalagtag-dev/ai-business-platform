@@ -132,6 +132,7 @@ export function ProductsTab() {
     <div>
       <PageHeader
         title="Products"
+        description="Manage your product catalog and pricing."
         actions={
           canManage && (
             <Button

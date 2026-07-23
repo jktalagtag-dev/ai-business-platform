@@ -126,6 +126,7 @@ export function WorkflowsListPage() {
     <div>
       <PageHeader
         title="Automation"
+        description="Event-driven and scheduled workflows for this workspace."
         actions={
           canManage && (
             <Button onClick={() => setCreateOpen(true)}>

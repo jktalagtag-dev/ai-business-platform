@@ -81,6 +81,7 @@ export function ConversationsListPage() {
     <div>
       <PageHeader
         title="AI Assistant"
+        description="Chat with an AI assistant that can look up your data."
         actions={
           <Button onClick={handleNewChat} disabled={createConversation.isPending}>
             <MessageSquarePlus className="h-4 w-4" />

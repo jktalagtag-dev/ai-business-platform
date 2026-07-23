@@ -11,10 +11,12 @@ export function AppLayout() {
       <Sidebar />
       <div className="flex min-h-0 min-w-0 flex-1 flex-col">
         <Topbar />
-        <main className="min-h-0 flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <Suspense fallback={<PageSkeleton />}>
-            <Outlet />
-          </Suspense>
+        <main className="min-h-0 flex-1 overflow-y-auto">
+          <div className="mx-auto w-full max-w-[1600px] p-4 sm:p-6 lg:p-8">
+            <Suspense fallback={<PageSkeleton />}>
+              <Outlet />
+            </Suspense>
+          </div>
         </main>
       </div>
     </div>

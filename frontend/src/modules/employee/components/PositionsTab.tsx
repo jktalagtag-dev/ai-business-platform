@@ -64,6 +64,7 @@ export function PositionsTab() {
     <div>
       <PageHeader
         title="Positions"
+        description="Job titles used across your organization."
         actions={
           canManage && (
             <Button

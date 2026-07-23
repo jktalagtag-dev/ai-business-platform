@@ -74,6 +74,7 @@ export function CategoriesTab() {
     <div>
       <PageHeader
         title="Categories"
+        description="Organize products into categories."
         actions={
           canManage && (
             <Button

@@ -118,6 +118,7 @@ export function TicketsListPage() {
     <div>
       <PageHeader
         title="Tickets"
+        description="Track and resolve IT support requests."
         actions={
           <Button onClick={() => setCreateOpen(true)}>
             <Plus className="h-4 w-4" />

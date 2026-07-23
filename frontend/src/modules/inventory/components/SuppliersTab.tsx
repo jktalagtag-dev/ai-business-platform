@@ -104,6 +104,7 @@ export function SuppliersTab() {
     <div>
       <PageHeader
         title="Suppliers"
+        description="Vendors you purchase inventory from."
         actions={
           canManage && (
             <Button
