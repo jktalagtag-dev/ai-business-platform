@@ -62,14 +62,21 @@ const config: Config = {
           accent: 'hsl(var(--sidebar-accent))',
           border: 'hsl(var(--sidebar-border))',
         },
+        info: {
+          DEFAULT: 'hsl(var(--info))',
+          foreground: 'hsl(var(--info-foreground))',
+        },
       },
       borderRadius: {
         lg: 'var(--radius)',
         md: 'calc(var(--radius) - 2px)',
         sm: 'calc(var(--radius) - 4px)',
+        card: 'var(--radius-card)',
+        dialog: 'var(--radius-dialog)',
       },
       fontFamily: {
         sans: [
+          'Inter',
           '-apple-system',
           'BlinkMacSystemFont',
           '"Segoe UI"',
@@ -79,11 +86,31 @@ const config: Config = {
           'sans-serif',
         ],
       },
+      // DESIGN_SYSTEM.md's Typography scale (px sizes, 140% line-height).
+      fontSize: {
+        display: ['4rem', { lineHeight: '1.4' }],
+        h1: ['3rem', { lineHeight: '1.4' }],
+        h2: ['2.25rem', { lineHeight: '1.4' }],
+        h3: ['1.75rem', { lineHeight: '1.4' }],
+        title: ['1.375rem', { lineHeight: '1.4' }],
+        body: ['1rem', { lineHeight: '1.4' }],
+        small: ['0.875rem', { lineHeight: '1.4' }],
+        caption: ['0.75rem', { lineHeight: '1.4' }],
+      },
       boxShadow: {
         xs: '0 1px 2px 0 rgb(0 0 0 / 0.04)',
         'elevation-1': '0 1px 3px 0 rgb(0 0 0 / 0.06), 0 1px 2px -1px rgb(0 0 0 / 0.06)',
         'elevation-2': '0 4px 12px -2px rgb(0 0 0 / 0.08), 0 2px 4px -2px rgb(0 0 0 / 0.06)',
         'elevation-3': '0 12px 24px -4px rgb(0 0 0 / 0.12), 0 4px 8px -4px rgb(0 0 0 / 0.08)',
+      },
+      // DESIGN_SYSTEM.md's Motion durations (150/200/250/300/500ms) — avoid
+      // bouncy/elastic easings, keep everything a plain ease-out.
+      transitionDuration: {
+        150: '150ms',
+        200: '200ms',
+        250: '250ms',
+        300: '300ms',
+        500: '500ms',
       },
       keyframes: {
         'accordion-down': {

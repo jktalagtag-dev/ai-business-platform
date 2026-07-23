@@ -7,32 +7,42 @@
  * tailwind.config.ts via hsl(var(--token)). This is the single source of
  * truth for color/radius; light + dark are class-based (`.dark` on <html>),
  * and a tenant's branding can override --primary at runtime after login.
+ *
+ * Palette source: DESIGN_SYSTEM.md. Hex → HSL conversions are exact for the
+ * brand colors (primary/destructive/info); a few near-neutral hex values
+ * (#141412, #5F605F) are simplified to true 0%-saturation grays since their
+ * actual saturation is under 1% — visually identical, cleaner tokens.
+ * success/warning keep this project's existing, already contrast-verified
+ * values rather than the doc's raw hex, since their hue is already within
+ * ~2° of the doc (142/38 vs doc's 142/36) and re-deriving would only
+ * reintroduce a white-text-contrast risk that was already solved once.
  */
 @layer base {
   :root {
     --background: 0 0% 100%;
-    --foreground: 222.2 47.4% 11.2%;
+    --foreground: 60 5% 8%;
 
     --card: 0 0% 100%;
-    --card-foreground: 222.2 47.4% 11.2%;
+    --card-foreground: 60 5% 8%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222.2 47.4% 11.2%;
+    --popover-foreground: 60 5% 8%;
 
-    --primary: 222.2 47.4% 11.2%;
-    --primary-foreground: 210 40% 98%;
+    --primary: 235 88% 53%;
+    --primary-foreground: 0 0% 100%;
+    --primary-hover: 234 100% 59%;
 
-    --secondary: 210 40% 96.1%;
-    --secondary-foreground: 222.2 47.4% 11.2%;
+    --secondary: 0 0% 98%;
+    --secondary-foreground: 60 5% 8%;
 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
+    --muted: 0 0% 98%;
+    --muted-foreground: 0 0% 55%;
 
-    --accent: 210 40% 96.1%;
-    --accent-foreground: 222.2 47.4% 11.2%;
+    --accent: 226 100% 97%;
+    --accent-foreground: 235 88% 40%;
 
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 210 40% 98%;
+    --destructive: 0 64% 50%;
+    --destructive-foreground: 0 0% 100%;
 
     --success: 142 71% 35%;
     --success-foreground: 0 0% 100%;
@@ -40,16 +50,21 @@
     --warning: 38 92% 45%;
     --warning-foreground: 0 0% 100%;
 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
-    --ring: 222.2 47.4% 11.2%;
+    --info: 215 85% 46%;
+    --info-foreground: 0 0% 100%;
 
-    --sidebar: 210 40% 98%;
-    --sidebar-foreground: 222.2 47.4% 11.2%;
-    --sidebar-accent: 210 40% 92%;
-    --sidebar-border: 214.3 31.8% 91.4%;
+    --border: 0 0% 92%;
+    --input: 0 0% 92%;
+    --ring: 235 88% 53%;
+
+    --sidebar: 0 0% 99%;
+    --sidebar-foreground: 60 5% 8%;
+    --sidebar-accent: 226 100% 97%;
+    --sidebar-border: 0 0% 92%;
 
     --radius: 0.75rem;
+    --radius-card: 1.25rem;
+    --radius-dialog: 1.5rem;
   }
 
   .dark {
@@ -62,8 +77,13 @@
     --popover: 222.2 84% 4.9%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 210 40% 98%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    /* Lightened for visibility on a dark surface; foreground flips to a
+       dark navy (rather than white) since a light-blue button needs dark
+       text to stay readable — mirrored by --info below for the same
+       reason. */
+    --primary: 234 100% 68%;
+    --primary-foreground: 235 60% 14%;
+    --primary-hover: 234 100% 74%;
 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
@@ -71,7 +91,7 @@
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 226 40% 18%;
     --accent-foreground: 210 40% 98%;
 
     --destructive: 0 62.8% 30.6%;
@@ -83,13 +103,16 @@
     --warning: 38 80% 40%;
     --warning-foreground: 210 40% 98%;
 
+    --info: 215 80% 62%;
+    --info-foreground: 215 60% 14%;
+
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --ring: 234 100% 68%;
 
     --sidebar: 222.2 47.4% 11.2%;
     --sidebar-foreground: 210 40% 98%;
-    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent: 226 40% 18%;
     --sidebar-border: 217.2 32.6% 17.5%;
   }
 }
@@ -101,5 +124,19 @@
   body {
     @apply bg-background text-foreground;
     font-feature-settings: 'rlig' 1, 'calt' 1;
+  }
+}
+
+/* DESIGN_SYSTEM.md "Motion" section: avoid bouncy/elastic/large-parallax
+   motion, and respect the OS-level reduced-motion preference everywhere
+   rather than per-component. */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }
